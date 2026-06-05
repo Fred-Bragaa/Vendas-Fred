@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-
     <title>Controle de Vendas</title>
 
     <style>
@@ -17,7 +16,6 @@
         :root {
             --bg: #020617;
             --card: #0f172a;
-            --card-2: #111827;
             --text: #e2e8f0;
             --muted: #94a3b8;
             --primary: #00AE9D;
@@ -40,7 +38,7 @@
         }
 
         .container {
-            max-width: 1180px;
+            max-width: 1220px;
             margin: 0 auto;
         }
 
@@ -98,7 +96,7 @@
             gap: 18px;
         }
 
-        @media(max-width: 850px) {
+        @media(max-width: 900px) {
             .grid {
                 grid-template-columns: 1fr;
             }
@@ -159,7 +157,7 @@
             gap: 12px;
         }
 
-        @media(max-width: 520px) {
+        @media(max-width: 620px) {
             .row {
                 grid-template-columns: 1fr;
             }
@@ -252,7 +250,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 720px;
+            min-width: 860px;
         }
 
         th,
@@ -348,13 +346,13 @@
             margin-bottom: 18px;
         }
 
-        @media(max-width: 900px) {
+        @media(max-width: 980px) {
             .summary-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
 
-        @media(max-width: 520px) {
+        @media(max-width: 560px) {
             .summary-grid {
                 grid-template-columns: 1fr;
             }
@@ -384,6 +382,10 @@
 
         .summary-box.warning strong {
             color: var(--warning);
+        }
+
+        .summary-box.danger strong {
+            color: var(--danger);
         }
 
         .admin-alert {
@@ -427,7 +429,7 @@
 
         <header class="header">
             <h1>Controle de Vendas</h1>
-            <p>Sistema simples com estoque, vendas e fechamento separado.</p>
+            <p>Estoque, compras, vendas, retiradas próprias e lucro bruto.</p>
         </header>
 
         <nav class="tabs">
@@ -446,19 +448,12 @@
 
                     <div class="form-group">
                         <label for="produtoNome">Nome do produto</label>
-                        <input id="produtoNome" type="text" placeholder="Ex.: Água, Refrigerante, Salgado">
+                        <input id="produtoNome" type="text" placeholder="Ex.: Figurinha Copa 2026">
                     </div>
 
-                    <div class="row">
-                        <div class="form-group">
-                            <label for="produtoPreco">Preço unitário</label>
-                            <input id="produtoPreco" type="number" min="0" step="0.01" value="7">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="produtoEstoque">Estoque inicial</label>
-                            <input id="produtoEstoque" type="number" min="0" step="1" value="0">
-                        </div>
+                    <div class="form-group">
+                        <label for="produtoPrecoVendaPadrao">Preço de venda padrão</label>
+                        <input id="produtoPrecoVendaPadrao" type="number" min="0" step="0.01" value="7">
                     </div>
 
                     <button type="button" class="btn" id="btnCadastrarProduto">
@@ -466,10 +461,14 @@
                     </button>
 
                     <div id="mensagemProduto" class="message"></div>
+
+                    <p class="muted" style="margin-top: 14px;">
+                        O estoque e o custo são lançados no bloco de compra/entrada ao lado.
+                    </p>
                 </div>
 
                 <div class="card">
-                    <h2>Adicionar estoque</h2>
+                    <h2>Compra / entrada de estoque</h2>
 
                     <div class="form-group">
                         <label for="estoqueProdutoSelect">Produto</label>
@@ -478,19 +477,26 @@
                         </select>
                     </div>
 
-                    <div class="form-group">
-                        <label for="estoqueQuantidade">Quantidade para adicionar</label>
-                        <input id="estoqueQuantidade" type="number" min="1" step="1" placeholder="Ex.: 10">
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="estoqueQuantidade">Quantidade comprada</label>
+                            <input id="estoqueQuantidade" type="number" min="1" step="1" placeholder="Ex.: 100">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="estoqueValorPago">Valor total pago</label>
+                            <input id="estoqueValorPago" type="number" min="0" step="0.01" placeholder="Ex.: 600">
+                        </div>
                     </div>
 
                     <button type="button" class="btn secondary" id="btnAdicionarEstoque">
-                        Adicionar ao estoque
+                        Registrar compra e adicionar estoque
                     </button>
 
                     <div id="mensagemEstoque" class="message"></div>
 
                     <p class="muted" style="margin-top: 14px;">
-                        A tela inicial mostra somente os produtos e o estoque atual.
+                        Exemplo: 100 unidades por R$ 600,00 cria custo unitário médio de R$ 6,00.
                     </p>
                 </div>
 
@@ -504,8 +510,10 @@
                         <thead>
                             <tr>
                                 <th>Produto</th>
-                                <th>Preço</th>
+                                <th>Preço venda padrão</th>
                                 <th>Estoque</th>
+                                <th>Custo médio</th>
+                                <th>Custo em estoque</th>
                                 <th>Situação</th>
                                 <th>Ações</th>
                             </tr>
@@ -513,7 +521,7 @@
 
                         <tbody id="tabelaEstoque">
                             <tr>
-                                <td colspan="5" class="empty">Carregando produtos...</td>
+                                <td colspan="7" class="empty">Carregando produtos...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -525,10 +533,30 @@
         <section id="tab-venda" class="tab-content">
 
             <div class="card">
-                <h2>Registrar venda</h2>
+                <h2>Registrar venda / retirada</h2>
 
                 <div class="grid">
                     <div>
+                        <div class="row">
+                            <div class="form-group">
+                                <label for="tipoSaida">Tipo</label>
+                                <select id="tipoSaida">
+                                    <option value="venda">Venda</option>
+                                    <option value="retirada">Retirada própria</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="dataVenda">Data</label>
+                                <input id="dataVenda" type="date">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="compradorVenda">Vendido para</label>
+                            <input id="compradorVenda" type="text" value="Evento" placeholder="Ex.: Evento, João, Maria">
+                        </div>
+
                         <div class="form-group">
                             <label for="vendaProdutoSelect">Produto</label>
                             <select id="vendaProdutoSelect">
@@ -543,6 +571,13 @@
                             </div>
 
                             <div class="form-group">
+                                <label for="precoVendaUnitario">Preço unitário vendido</label>
+                                <input id="precoVendaUnitario" type="number" min="0" step="0.01" placeholder="Ex.: 7">
+                            </div>
+                        </div>
+
+                        <div class="row" id="grupoPagamento">
+                            <div class="form-group">
                                 <label for="formaPagamento">Forma de pagamento</label>
                                 <select id="formaPagamento">
                                     <option value="dinheiro">Dinheiro</option>
@@ -550,26 +585,26 @@
                                     <option value="cartao">Cartão</option>
                                 </select>
                             </div>
-                        </div>
 
-                        <div class="form-group hidden" id="grupoTaxaCartao">
-                            <label for="taxaCartao">Acréscimo do cartão</label>
-                            <select id="taxaCartao">
-                                <option value="3">3%</option>
-                                <option value="4">4%</option>
-                                <option value="5">5%</option>
-                            </select>
+                            <div class="form-group hidden" id="grupoTaxaCartao">
+                                <label for="taxaCartao">Acréscimo do cartão</label>
+                                <select id="taxaCartao">
+                                    <option value="3">3%</option>
+                                    <option value="4">4%</option>
+                                    <option value="5">5%</option>
+                                </select>
+                            </div>
                         </div>
 
                         <button type="button" class="btn" id="btnConcluirVenda">
-                            Concluir venda
+                            Concluir lançamento
                         </button>
 
                         <div id="mensagemVenda" class="message"></div>
                     </div>
 
                     <div>
-                        <h3>Resumo da venda</h3>
+                        <h3>Resumo do lançamento</h3>
 
                         <div class="result-box">
                             <div class="result-line">
@@ -578,8 +613,13 @@
                             </div>
 
                             <div class="result-line">
-                                <span>Preço unitário</span>
+                                <span>Preço unitário vendido</span>
                                 <strong id="resumoPreco">R$ 0,00</strong>
+                            </div>
+
+                            <div class="result-line">
+                                <span>Custo unitário médio</span>
+                                <strong id="resumoCustoUnitario">R$ 0,00</strong>
                             </div>
 
                             <div class="result-line">
@@ -588,18 +628,28 @@
                             </div>
 
                             <div class="result-line">
+                                <span>Custo da saída</span>
+                                <strong id="resumoCustoSaida">R$ 0,00</strong>
+                            </div>
+
+                            <div class="result-line">
                                 <span>Taxa cartão</span>
                                 <strong id="resumoAcrescimo">R$ 0,00</strong>
                             </div>
 
-                            <div class="result-line total">
+                            <div class="result-line">
                                 <span>Total cobrado do cliente</span>
                                 <strong id="resumoTotal">R$ 0,00</strong>
+                            </div>
+
+                            <div class="result-line total">
+                                <span>Lucro bruto estimado</span>
+                                <strong id="resumoLucro">R$ 0,00</strong>
                             </div>
                         </div>
 
                         <p class="muted">
-                            O total vendido no relatório considera apenas o valor dos produtos. A taxa do cartão fica separada.
+                            Para retirada própria, o preço unitário fica R$ 0,00 e o sistema baixa o estoque considerando o custo.
                         </p>
                     </div>
                 </div>
@@ -614,23 +664,23 @@
 
                 <div class="summary-grid">
                     <div class="summary-box success">
-                        <span>Total vendido sem taxa</span>
+                        <span>Receita vendas sem taxa</span>
                         <strong id="relTotalVendido">R$ 0,00</strong>
                     </div>
 
-                    <div class="summary-box">
-                        <span>Número de vendas</span>
-                        <strong id="relNumeroVendas">0</strong>
-                    </div>
-
-                    <div class="summary-box">
-                        <span>Quantidade vendida</span>
-                        <strong id="relQuantidadeVendida">0</strong>
-                    </div>
-
                     <div class="summary-box warning">
-                        <span>Cartão sem taxa</span>
-                        <strong id="relTotalCartao">R$ 0,00</strong>
+                        <span>Custo das vendas</span>
+                        <strong id="relCustoVendas">R$ 0,00</strong>
+                    </div>
+
+                    <div class="summary-box success">
+                        <span>Lucro bruto vendas</span>
+                        <strong id="relLucroVendas">R$ 0,00</strong>
+                    </div>
+
+                    <div class="summary-box danger">
+                        <span>Custo retiradas próprias</span>
+                        <strong id="relCustoRetiradas">R$ 0,00</strong>
                     </div>
                 </div>
 
@@ -646,7 +696,7 @@
                     </div>
 
                     <div class="summary-box">
-                        <span>Cartão</span>
+                        <span>Cartão sem taxa</span>
                         <strong id="relCartao">R$ 0,00</strong>
                     </div>
 
@@ -656,29 +706,54 @@
                     </div>
                 </div>
 
+                <div class="summary-grid">
+                    <div class="summary-box">
+                        <span>Número de lançamentos</span>
+                        <strong id="relNumeroVendas">0</strong>
+                    </div>
+
+                    <div class="summary-box">
+                        <span>Quantidade vendida</span>
+                        <strong id="relQuantidadeVendida">0</strong>
+                    </div>
+
+                    <div class="summary-box">
+                        <span>Quantidade retirada</span>
+                        <strong id="relQuantidadeRetirada">0</strong>
+                    </div>
+
+                    <div class="summary-box success">
+                        <span>Resultado geral</span>
+                        <strong id="relResultadoGeral">R$ 0,00</strong>
+                    </div>
+                </div>
+
                 <button type="button" class="btn secondary" id="btnExportarCsv">
-                    Exportar vendas CSV
+                    Exportar lançamentos CSV
                 </button>
 
                 <div id="mensagemRelatorio" class="message"></div>
             </div>
 
             <div class="card" style="margin-top: 18px;">
-                <h2>Produtos vendidos</h2>
+                <h2>Produtos vendidos / retirados</h2>
 
                 <div class="table-wrap">
                     <table>
                         <thead>
                             <tr>
                                 <th>Produto</th>
-                                <th>Quantidade vendida</th>
-                                <th>Total vendido sem taxa</th>
+                                <th>Qtd vendas</th>
+                                <th>Qtd retiradas</th>
+                                <th>Receita vendas</th>
+                                <th>Custo saídas</th>
+                                <th>Resultado</th>
                             </tr>
                         </thead>
 
                         <tbody id="tabelaProdutosVendidos">
                             <tr>
-                                <td colspan="3" class="empty">Nenhuma venda registrada.</td>
+                                <td colspan="6" class="empty">Nenhum lançamento registrado.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -686,25 +761,29 @@
             </div>
 
             <div class="card" style="margin-top: 18px;">
-                <h2>Vendas feitas</h2>
+                <h2>Lançamentos feitos</h2>
 
                 <div class="table-wrap">
                     <table>
                         <thead>
                             <tr>
-                                <th>Data/Hora</th>
+                                <th>Data</th>
+                                <th>Tipo</th>
+                                <th>Para quem</th>
                                 <th>Produto</th>
                                 <th>Qtd</th>
                                 <th>Pagamento</th>
-                                <th>Valor venda</th>
+                                <th>Receita</th>
+                                <th>Custo</th>
                                 <th>Taxa cartão</th>
                                 <th>Total cobrado</th>
+                                <th>Resultado</th>
                             </tr>
                         </thead>
 
                         <tbody id="tabelaVendas">
                             <tr>
-                                <td colspan="7" class="empty">Nenhuma venda registrada.</td>
+                                <td colspan="11" class="empty">Nenhum lançamento registrado.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -725,10 +804,10 @@
 
                 <div class="grid">
                     <div class="card">
-                        <h3>Limpar somente vendas</h3>
+                        <h3>Limpar somente lançamentos</h3>
 
                         <p class="muted" style="margin-bottom: 14px;">
-                            Mantém os produtos e estoques cadastrados, mas apaga todas as vendas do relatório.
+                            Mantém produtos e estoque atual, mas apaga vendas, retiradas e histórico de compras.
                         </p>
 
                         <div class="form-group">
@@ -737,7 +816,7 @@
                         </div>
 
                         <button type="button" class="btn danger" id="btnLimparVendas">
-                            Limpar vendas
+                            Limpar lançamentos
                         </button>
 
                         <div id="mensagemLimparVendas" class="message"></div>
@@ -747,7 +826,7 @@
                         <h3>Limpar banco completo</h3>
 
                         <p class="muted" style="margin-bottom: 14px;">
-                            Apaga produtos, estoques e vendas. O sistema volta completamente zerado.
+                            Apaga produtos, estoques, compras, vendas e retiradas. O sistema volta zerado.
                         </p>
 
                         <div class="form-group">
@@ -794,27 +873,34 @@
         const baseRef = db.ref(BASE_PATH);
         const produtosRef = db.ref(`${BASE_PATH}/produtos`);
         const vendasRef = db.ref(`${BASE_PATH}/vendas`);
+        const comprasRef = db.ref(`${BASE_PATH}/compras`);
         const configuracoesRef = db.ref(`${BASE_PATH}/configuracoes`);
 
         let produtos = {};
         let vendas = {};
+        let compras = {};
 
         const els = {
             produtoNome: document.getElementById("produtoNome"),
-            produtoPreco: document.getElementById("produtoPreco"),
-            produtoEstoque: document.getElementById("produtoEstoque"),
+            produtoPrecoVendaPadrao: document.getElementById("produtoPrecoVendaPadrao"),
             btnCadastrarProduto: document.getElementById("btnCadastrarProduto"),
             mensagemProduto: document.getElementById("mensagemProduto"),
 
             estoqueProdutoSelect: document.getElementById("estoqueProdutoSelect"),
             estoqueQuantidade: document.getElementById("estoqueQuantidade"),
+            estoqueValorPago: document.getElementById("estoqueValorPago"),
             btnAdicionarEstoque: document.getElementById("btnAdicionarEstoque"),
             mensagemEstoque: document.getElementById("mensagemEstoque"),
 
             tabelaEstoque: document.getElementById("tabelaEstoque"),
 
+            tipoSaida: document.getElementById("tipoSaida"),
+            dataVenda: document.getElementById("dataVenda"),
+            compradorVenda: document.getElementById("compradorVenda"),
             vendaProdutoSelect: document.getElementById("vendaProdutoSelect"),
             vendaQuantidade: document.getElementById("vendaQuantidade"),
+            precoVendaUnitario: document.getElementById("precoVendaUnitario"),
+            grupoPagamento: document.getElementById("grupoPagamento"),
             formaPagamento: document.getElementById("formaPagamento"),
             grupoTaxaCartao: document.getElementById("grupoTaxaCartao"),
             taxaCartao: document.getElementById("taxaCartao"),
@@ -823,18 +909,25 @@
 
             resumoProduto: document.getElementById("resumoProduto"),
             resumoPreco: document.getElementById("resumoPreco"),
+            resumoCustoUnitario: document.getElementById("resumoCustoUnitario"),
             resumoSubtotal: document.getElementById("resumoSubtotal"),
+            resumoCustoSaida: document.getElementById("resumoCustoSaida"),
             resumoAcrescimo: document.getElementById("resumoAcrescimo"),
             resumoTotal: document.getElementById("resumoTotal"),
+            resumoLucro: document.getElementById("resumoLucro"),
 
             relTotalVendido: document.getElementById("relTotalVendido"),
-            relNumeroVendas: document.getElementById("relNumeroVendas"),
-            relQuantidadeVendida: document.getElementById("relQuantidadeVendida"),
-            relTotalCartao: document.getElementById("relTotalCartao"),
+            relCustoVendas: document.getElementById("relCustoVendas"),
+            relLucroVendas: document.getElementById("relLucroVendas"),
+            relCustoRetiradas: document.getElementById("relCustoRetiradas"),
             relDinheiro: document.getElementById("relDinheiro"),
             relPix: document.getElementById("relPix"),
             relCartao: document.getElementById("relCartao"),
             relAcrescimosCartao: document.getElementById("relAcrescimosCartao"),
+            relNumeroVendas: document.getElementById("relNumeroVendas"),
+            relQuantidadeVendida: document.getElementById("relQuantidadeVendida"),
+            relQuantidadeRetirada: document.getElementById("relQuantidadeRetirada"),
+            relResultadoGeral: document.getElementById("relResultadoGeral"),
             tabelaProdutosVendidos: document.getElementById("tabelaProdutosVendidos"),
             tabelaVendas: document.getElementById("tabelaVendas"),
             btnExportarCsv: document.getElementById("btnExportarCsv"),
@@ -848,6 +941,15 @@
             mensagemLimparTudo: document.getElementById("mensagemLimparTudo")
         };
 
+        function hojeISOData() {
+            const hoje = new Date();
+            const ano = hoje.getFullYear();
+            const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+            const dia = String(hoje.getDate()).padStart(2, "0");
+
+            return `${ano}-${mes}-${dia}`;
+        }
+
         function formatarMoeda(valor) {
             return Number(valor || 0).toLocaleString("pt-BR", {
                 style: "currency",
@@ -855,17 +957,20 @@
             });
         }
 
-        function formatarDataHora(valorIso) {
-            if (!valorIso) {
+        function formatarData(valorIsoOuData) {
+            if (!valorIsoOuData) {
                 return "";
             }
 
-            const data = new Date(valorIso);
+            const partes = String(valorIsoOuData).split("-");
 
-            return data.toLocaleString("pt-BR", {
-                dateStyle: "short",
-                timeStyle: "short"
-            });
+            if (partes.length === 3) {
+                return `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
+
+            const data = new Date(valorIsoOuData);
+
+            return data.toLocaleDateString("pt-BR");
         }
 
         function normalizarNumero(valor) {
@@ -932,9 +1037,9 @@
             const options = ativos.map(([id, produto]) => {
                 const nome = produto.nome || "Sem nome";
                 const estoque = Number(produto.estoqueAtual || 0);
-                const preco = formatarMoeda(produto.precoUnitario || 0);
+                const preco = formatarMoeda(produto.precoVendaPadrao || 0);
 
-                return `<option value="${id}">${nome} | ${preco} | Estoque: ${estoque}</option>`;
+                return `<option value="${id}">${nome} | Venda padrão: ${preco} | Estoque: ${estoque}</option>`;
             }).join("");
 
             const estoqueSelecionadoAntes = els.estoqueProdutoSelect.value;
@@ -958,7 +1063,7 @@
             if (ativos.length === 0) {
                 els.tabelaEstoque.innerHTML = `
                     <tr>
-                        <td colspan="5" class="empty">
+                        <td colspan="7" class="empty">
                             Nenhum produto cadastrado ainda.
                         </td>
                     </tr>
@@ -968,7 +1073,9 @@
 
             els.tabelaEstoque.innerHTML = ativos.map(([id, produto]) => {
                 const estoque = Number(produto.estoqueAtual || 0);
-                const preco = Number(produto.precoUnitario || 0);
+                const precoVendaPadrao = Number(produto.precoVendaPadrao || 0);
+                const custoUnitarioMedio = Number(produto.custoUnitarioMedio || 0);
+                const custoTotalEstoqueAtual = Number(produto.custoTotalEstoqueAtual || 0);
 
                 let classeEstoque = "";
 
@@ -987,17 +1094,19 @@
                 return `
                     <tr>
                         <td><strong>${produto.nome}</strong></td>
-                        <td>${formatarMoeda(preco)}</td>
+                        <td>${formatarMoeda(precoVendaPadrao)}</td>
                         <td>
                             <span class="stock-badge ${classeEstoque}">
                                 ${estoque}
                             </span>
                         </td>
+                        <td>${formatarMoeda(custoUnitarioMedio)}</td>
+                        <td>${formatarMoeda(custoTotalEstoqueAtual)}</td>
                         <td>${situacao}</td>
                         <td>
                             <div class="actions-inline">
                                 <button type="button" class="btn small secondary" onclick="selecionarProdutoParaEstoque('${id}')">
-                                    + Estoque
+                                    + Compra
                                 </button>
 
                                 <button type="button" class="btn small danger" onclick="inativarProduto('${id}')">
@@ -1010,34 +1119,94 @@
             }).join("");
         }
 
+        function ajustarTelaPorTipoSaida() {
+            const tipoSaida = els.tipoSaida.value;
+
+            if (tipoSaida === "retirada") {
+                els.compradorVenda.value = "Uso próprio";
+                els.precoVendaUnitario.value = "0";
+                els.grupoPagamento.classList.add("hidden");
+                els.grupoTaxaCartao.classList.add("hidden");
+            } else {
+                if (!els.compradorVenda.value || els.compradorVenda.value === "Uso próprio") {
+                    els.compradorVenda.value = "Evento";
+                }
+
+                els.grupoPagamento.classList.remove("hidden");
+
+                const ehCartao = els.formaPagamento.value === "cartao";
+                els.grupoTaxaCartao.classList.toggle("hidden", !ehCartao);
+
+                preencherPrecoPadraoVenda();
+            }
+
+            calcularVenda();
+        }
+
+        function preencherPrecoPadraoVenda() {
+            const tipoSaida = els.tipoSaida.value;
+
+            if (tipoSaida === "retirada") {
+                return;
+            }
+
+            const produto = obterProdutoSelecionado(els.vendaProdutoSelect);
+
+            if (!produto) {
+                return;
+            }
+
+            els.precoVendaUnitario.value = Number(produto.precoVendaPadrao || 0).toFixed(2);
+        }
+
         function calcularVenda() {
             const produto = obterProdutoSelecionado(els.vendaProdutoSelect);
+            const tipoSaida = els.tipoSaida.value;
             const quantidade = Number.parseInt(els.vendaQuantidade.value, 10) || 0;
-            const formaPagamento = els.formaPagamento.value;
+
+            const formaPagamento = tipoSaida === "retirada"
+                ? "retirada"
+                : els.formaPagamento.value;
+
             const taxaCartao = formaPagamento === "cartao"
                 ? normalizarNumero(els.taxaCartao.value)
                 : 0;
 
-            const precoUnitario = produto ? Number(produto.precoUnitario || 0) : 0;
-            const valorVenda = quantidade * precoUnitario;
+            const precoUnitarioVendido = tipoSaida === "retirada"
+                ? 0
+                : normalizarNumero(els.precoVendaUnitario.value);
+
+            const custoUnitarioMedio = produto ? Number(produto.custoUnitarioMedio || 0) : 0;
+            const valorVenda = quantidade * precoUnitarioVendido;
+            const custoSaida = quantidade * custoUnitarioMedio;
             const taxaOperadora = valorVenda * (taxaCartao / 100);
             const totalCobradoCliente = valorVenda + taxaOperadora;
+            const lucroBruto = valorVenda - custoSaida;
 
             els.resumoProduto.textContent = produto ? produto.nome : "Nenhum produto selecionado";
-            els.resumoPreco.textContent = formatarMoeda(precoUnitario);
+            els.resumoPreco.textContent = formatarMoeda(precoUnitarioVendido);
+            els.resumoCustoUnitario.textContent = formatarMoeda(custoUnitarioMedio);
             els.resumoSubtotal.textContent = formatarMoeda(valorVenda);
+            els.resumoCustoSaida.textContent = formatarMoeda(custoSaida);
             els.resumoAcrescimo.textContent = formatarMoeda(taxaOperadora);
             els.resumoTotal.textContent = formatarMoeda(totalCobradoCliente);
+            els.resumoLucro.textContent = formatarMoeda(lucroBruto);
 
             return {
                 produto,
+                tipoSaida,
+                dataVenda: els.dataVenda.value || hojeISOData(),
+                comprador: els.compradorVenda.value.trim() || "Evento",
                 quantidade,
                 formaPagamento,
                 taxaCartao,
-                precoUnitario,
+                precoUnitarioVendido,
+                custoUnitarioMedio,
                 valorVenda,
+                custoSaida,
                 taxaOperadora,
-                totalCobradoCliente
+                totalCobradoCliente,
+                lucroBruto
             };
         }
 
@@ -1045,13 +1214,23 @@
             const mapa = {
                 dinheiro: "Dinheiro",
                 pix: "Pix",
-                cartao: "Cartão"
+                cartao: "Cartão",
+                retirada: "Sem pagamento"
             };
 
             return mapa[forma] || forma || "";
         }
 
-        function obterListaVendasValidas() {
+        function formatarTipoSaida(tipo) {
+            const mapa = {
+                venda: "Venda",
+                retirada: "Retirada própria"
+            };
+
+            return mapa[tipo] || tipo || "";
+        }
+
+        function obterListaLancamentosValidos() {
             return Object.entries(vendas)
                 .filter(([, venda]) => venda && venda.produtoNome)
                 .map(([id, venda]) => ({
@@ -1060,131 +1239,141 @@
                 }));
         }
 
-        function obterValorVendaSemTaxa(venda) {
-            return Number(
-                venda.valorVenda ??
-                venda.subtotal ??
-                venda.total ??
-                0
-            );
-        }
-
-        function obterTaxaOperadora(venda) {
-            return Number(
-                venda.taxaOperadora ??
-                venda.acrescimoCartao ??
-                0
-            );
-        }
-
-        function obterTotalCobradoCliente(venda) {
-            const valorVenda = obterValorVendaSemTaxa(venda);
-            const taxaOperadora = obterTaxaOperadora(venda);
-
-            return Number(
-                venda.totalCobradoCliente ??
-                (valorVenda + taxaOperadora)
-            );
-        }
-
         function renderizarRelatorio() {
-            const listaVendas = obterListaVendasValidas()
-                .sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
+            const lista = obterListaLancamentosValidos()
+                .sort((a, b) => String(b.dataVenda || "").localeCompare(String(a.dataVenda || "")));
 
-            let totalVendido = 0;
+            let receitaVendas = 0;
+            let custoVendas = 0;
+            let lucroVendas = 0;
+            let custoRetiradas = 0;
             let totalDinheiro = 0;
             let totalPix = 0;
             let totalCartao = 0;
             let taxasCartao = 0;
             let quantidadeVendida = 0;
+            let quantidadeRetirada = 0;
 
-            const produtosVendidos = {};
+            const produtosResumo = {};
 
-            listaVendas.forEach(venda => {
-                const valorVenda = obterValorVendaSemTaxa(venda);
-                const taxaOperadora = obterTaxaOperadora(venda);
-                const quantidade = Number(venda.quantidade || 0);
+            lista.forEach(item => {
+                const tipoSaida = item.tipoSaida || "venda";
+                const quantidade = Number(item.quantidade || 0);
+                const valorVenda = Number(item.valorVenda || 0);
+                const custoSaida = Number(item.custoSaida || 0);
+                const taxaOperadora = Number(item.taxaOperadora || 0);
+                const resultado = valorVenda - custoSaida;
 
-                totalVendido += valorVenda;
-                quantidadeVendida += quantidade;
-
-                if (venda.formaPagamento === "dinheiro") {
-                    totalDinheiro += valorVenda;
-                }
-
-                if (venda.formaPagamento === "pix") {
-                    totalPix += valorVenda;
-                }
-
-                if (venda.formaPagamento === "cartao") {
-                    totalCartao += valorVenda;
-                    taxasCartao += taxaOperadora;
-                }
-
-                if (!produtosVendidos[venda.produtoNome]) {
-                    produtosVendidos[venda.produtoNome] = {
-                        quantidade: 0,
-                        total: 0
+                if (!produtosResumo[item.produtoNome]) {
+                    produtosResumo[item.produtoNome] = {
+                        qtdVenda: 0,
+                        qtdRetirada: 0,
+                        receita: 0,
+                        custo: 0,
+                        resultado: 0
                     };
                 }
 
-                produtosVendidos[venda.produtoNome].quantidade += quantidade;
-                produtosVendidos[venda.produtoNome].total += valorVenda;
+                if (tipoSaida === "retirada") {
+                    quantidadeRetirada += quantidade;
+                    custoRetiradas += custoSaida;
+
+                    produtosResumo[item.produtoNome].qtdRetirada += quantidade;
+                } else {
+                    receitaVendas += valorVenda;
+                    custoVendas += custoSaida;
+                    lucroVendas += resultado;
+                    quantidadeVendida += quantidade;
+
+                    if (item.formaPagamento === "dinheiro") {
+                        totalDinheiro += valorVenda;
+                    }
+
+                    if (item.formaPagamento === "pix") {
+                        totalPix += valorVenda;
+                    }
+
+                    if (item.formaPagamento === "cartao") {
+                        totalCartao += valorVenda;
+                        taxasCartao += taxaOperadora;
+                    }
+
+                    produtosResumo[item.produtoNome].qtdVenda += quantidade;
+                    produtosResumo[item.produtoNome].receita += valorVenda;
+                }
+
+                produtosResumo[item.produtoNome].custo += custoSaida;
+                produtosResumo[item.produtoNome].resultado += resultado;
             });
 
-            els.relTotalVendido.textContent = formatarMoeda(totalVendido);
-            els.relNumeroVendas.textContent = listaVendas.length;
-            els.relQuantidadeVendida.textContent = quantidadeVendida;
-            els.relTotalCartao.textContent = formatarMoeda(totalCartao);
+            const resultadoGeral = receitaVendas - custoVendas - custoRetiradas;
+
+            els.relTotalVendido.textContent = formatarMoeda(receitaVendas);
+            els.relCustoVendas.textContent = formatarMoeda(custoVendas);
+            els.relLucroVendas.textContent = formatarMoeda(lucroVendas);
+            els.relCustoRetiradas.textContent = formatarMoeda(custoRetiradas);
             els.relDinheiro.textContent = formatarMoeda(totalDinheiro);
             els.relPix.textContent = formatarMoeda(totalPix);
             els.relCartao.textContent = formatarMoeda(totalCartao);
             els.relAcrescimosCartao.textContent = formatarMoeda(taxasCartao);
+            els.relNumeroVendas.textContent = lista.length;
+            els.relQuantidadeVendida.textContent = quantidadeVendida;
+            els.relQuantidadeRetirada.textContent = quantidadeRetirada;
+            els.relResultadoGeral.textContent = formatarMoeda(resultadoGeral);
 
-            const produtosVendidosLista = Object.entries(produtosVendidos)
+            const produtosLista = Object.entries(produtosResumo)
                 .sort(([a], [b]) => a.localeCompare(b));
 
-            if (produtosVendidosLista.length === 0) {
+            if (produtosLista.length === 0) {
                 els.tabelaProdutosVendidos.innerHTML = `
                     <tr>
-                        <td colspan="3" class="empty">
-                            Nenhuma venda registrada.
+                        <td colspan="6" class="empty">
+                            Nenhum lançamento registrado.
                         </td>
                     </tr>
                 `;
             } else {
-                els.tabelaProdutosVendidos.innerHTML = produtosVendidosLista.map(([nome, dados]) => `
+                els.tabelaProdutosVendidos.innerHTML = produtosLista.map(([nome, dados]) => `
                     <tr>
                         <td><strong>${nome}</strong></td>
-                        <td>${dados.quantidade}</td>
-                        <td>${formatarMoeda(dados.total)}</td>
+                        <td>${dados.qtdVenda}</td>
+                        <td>${dados.qtdRetirada}</td>
+                        <td>${formatarMoeda(dados.receita)}</td>
+                        <td>${formatarMoeda(dados.custo)}</td>
+                        <td>${formatarMoeda(dados.resultado)}</td>
                     </tr>
                 `).join("");
             }
 
-            if (listaVendas.length === 0) {
+            if (lista.length === 0) {
                 els.tabelaVendas.innerHTML = `
                     <tr>
-                        <td colspan="7" class="empty">
-                            Nenhuma venda registrada.
+                        <td colspan="11" class="empty">
+                            Nenhum lançamento registrado.
                         </td>
                     </tr>
                 `;
             } else {
-                els.tabelaVendas.innerHTML = listaVendas.map(venda => {
-                    const valorVenda = obterValorVendaSemTaxa(venda);
-                    const taxaOperadora = obterTaxaOperadora(venda);
-                    const totalCobradoCliente = obterTotalCobradoCliente(venda);
+                els.tabelaVendas.innerHTML = lista.map(item => {
+                    const valorVenda = Number(item.valorVenda || 0);
+                    const custoSaida = Number(item.custoSaida || 0);
+                    const taxaOperadora = Number(item.taxaOperadora || 0);
+                    const totalCobradoCliente = Number(item.totalCobradoCliente || valorVenda + taxaOperadora);
+                    const resultado = valorVenda - custoSaida;
 
                     return `
                         <tr>
-                            <td>${formatarDataHora(venda.criadoEm)}</td>
-                            <td>${venda.produtoNome}</td>
-                            <td>${venda.quantidade}</td>
-                            <td>${formatarFormaPagamento(venda.formaPagamento)}</td>
+                            <td>${formatarData(item.dataVenda || item.criadoEm)}</td>
+                            <td>${formatarTipoSaida(item.tipoSaida || "venda")}</td>
+                            <td>${item.comprador || "Evento"}</td>
+                            <td>${item.produtoNome}</td>
+                            <td>${item.quantidade}</td>
+                            <td>${formatarFormaPagamento(item.formaPagamento)}</td>
                             <td>${formatarMoeda(valorVenda)}</td>
+                            <td>${formatarMoeda(custoSaida)}</td>
                             <td>${formatarMoeda(taxaOperadora)}</td>
-                            <td><strong>${formatarMoeda(totalCobradoCliente)}</strong></td>
+                            <td>${formatarMoeda(totalCobradoCliente)}</td>
+                            <td><strong>${formatarMoeda(resultado)}</strong></td>
                         </tr>
                     `;
                 }).join("");
@@ -1193,21 +1382,15 @@
 
         async function cadastrarProduto() {
             const nome = els.produtoNome.value.trim();
-            const preco = normalizarNumero(els.produtoPreco.value);
-            const estoque = Number.parseInt(els.produtoEstoque.value, 10) || 0;
+            const precoVendaPadrao = normalizarNumero(els.produtoPrecoVendaPadrao.value);
 
             if (!nome) {
                 mostrarMensagem(els.mensagemProduto, "Informe o nome do produto.", "error");
                 return;
             }
 
-            if (preco <= 0) {
-                mostrarMensagem(els.mensagemProduto, "Informe um preço maior que zero.", "error");
-                return;
-            }
-
-            if (estoque < 0) {
-                mostrarMensagem(els.mensagemProduto, "O estoque não pode ser negativo.", "error");
+            if (precoVendaPadrao < 0) {
+                mostrarMensagem(els.mensagemProduto, "O preço padrão não pode ser negativo.", "error");
                 return;
             }
 
@@ -1215,8 +1398,12 @@
 
             const produto = {
                 nome,
-                precoUnitario: Number(preco.toFixed(2)),
-                estoqueAtual: estoque,
+                precoVendaPadrao: Number(precoVendaPadrao.toFixed(2)),
+                estoqueAtual: 0,
+                quantidadeCompradaTotal: 0,
+                valorComprasTotal: 0,
+                custoTotalEstoqueAtual: 0,
+                custoUnitarioMedio: 0,
                 ativo: true,
                 criadoEm: new Date().toISOString(),
                 atualizadoEm: new Date().toISOString()
@@ -1226,8 +1413,7 @@
                 await novoProdutoRef.set(produto);
 
                 els.produtoNome.value = "";
-                els.produtoPreco.value = "7";
-                els.produtoEstoque.value = "0";
+                els.produtoPrecoVendaPadrao.value = "7";
 
                 mostrarMensagem(els.mensagemProduto, "Produto cadastrado com sucesso.", "success");
             } catch (erro) {
@@ -1238,6 +1424,7 @@
         async function adicionarEstoque() {
             const produtoId = els.estoqueProdutoSelect.value;
             const quantidade = Number.parseInt(els.estoqueQuantidade.value, 10) || 0;
+            const valorPagoTotal = normalizarNumero(els.estoqueValorPago.value);
 
             if (!produtoId || !produtos[produtoId]) {
                 mostrarMensagem(els.mensagemEstoque, "Selecione um produto.", "error");
@@ -1249,19 +1436,53 @@
                 return;
             }
 
-            const produtoEstoqueRef = db.ref(`${BASE_PATH}/produtos/${produtoId}/estoqueAtual`);
-            const produtoAtualizadoRef = db.ref(`${BASE_PATH}/produtos/${produtoId}/atualizadoEm`);
+            if (valorPagoTotal < 0) {
+                mostrarMensagem(els.mensagemEstoque, "O valor pago não pode ser negativo.", "error");
+                return;
+            }
+
+            const produtoRef = db.ref(`${BASE_PATH}/produtos/${produtoId}`);
+            const produtoNome = produtos[produtoId].nome;
+            const custoUnitarioCompra = quantidade > 0 ? valorPagoTotal / quantidade : 0;
 
             try {
-                await produtoEstoqueRef.transaction(estoqueAtual => {
-                    return Number(estoqueAtual || 0) + quantidade;
+                await produtoRef.transaction(produtoAtual => {
+                    if (!produtoAtual) {
+                        return produtoAtual;
+                    }
+
+                    const estoqueAtual = Number(produtoAtual.estoqueAtual || 0);
+                    const custoTotalEstoqueAtual = Number(produtoAtual.custoTotalEstoqueAtual || 0);
+                    const quantidadeCompradaTotal = Number(produtoAtual.quantidadeCompradaTotal || 0);
+                    const valorComprasTotal = Number(produtoAtual.valorComprasTotal || 0);
+
+                    const novoEstoque = estoqueAtual + quantidade;
+                    const novoCustoTotalEstoque = custoTotalEstoqueAtual + valorPagoTotal;
+                    const novoCustoMedio = novoEstoque > 0 ? novoCustoTotalEstoque / novoEstoque : 0;
+
+                    produtoAtual.estoqueAtual = novoEstoque;
+                    produtoAtual.custoTotalEstoqueAtual = Number(novoCustoTotalEstoque.toFixed(2));
+                    produtoAtual.custoUnitarioMedio = Number(novoCustoMedio.toFixed(4));
+                    produtoAtual.quantidadeCompradaTotal = quantidadeCompradaTotal + quantidade;
+                    produtoAtual.valorComprasTotal = Number((valorComprasTotal + valorPagoTotal).toFixed(2));
+                    produtoAtual.atualizadoEm = new Date().toISOString();
+
+                    return produtoAtual;
                 });
 
-                await produtoAtualizadoRef.set(new Date().toISOString());
+                await comprasRef.push({
+                    produtoId,
+                    produtoNome,
+                    quantidade,
+                    valorPagoTotal: Number(valorPagoTotal.toFixed(2)),
+                    custoUnitarioCompra: Number(custoUnitarioCompra.toFixed(4)),
+                    criadoEm: new Date().toISOString()
+                });
 
                 els.estoqueQuantidade.value = "";
+                els.estoqueValorPago.value = "";
 
-                mostrarMensagem(els.mensagemEstoque, "Estoque atualizado com sucesso.", "success");
+                mostrarMensagem(els.mensagemEstoque, "Compra registrada e estoque atualizado.", "success");
             } catch (erro) {
                 mostrarMensagem(els.mensagemEstoque, `Erro ao adicionar estoque: ${erro.message}`, "error");
             }
@@ -1280,12 +1501,19 @@
                 return;
             }
 
+            if (calculo.tipoSaida === "venda" && calculo.precoUnitarioVendido < 0) {
+                mostrarMensagem(els.mensagemVenda, "O preço de venda não pode ser negativo.", "error");
+                return;
+            }
+
             const produtoId = calculo.produto.id;
             const produtoRef = db.ref(`${BASE_PATH}/produtos/${produtoId}`);
 
             try {
-                let vendaPodeSerRegistrada = false;
+                let lancamentoPodeSerRegistrado = false;
                 let mensagemErro = "";
+                let custoUnitarioMedioUsado = 0;
+                let custoSaidaCalculado = 0;
 
                 await produtoRef.transaction(produtoAtual => {
                     if (!produtoAtual) {
@@ -1294,44 +1522,64 @@
                     }
 
                     const estoqueAtual = Number(produtoAtual.estoqueAtual || 0);
+                    const custoTotalEstoqueAtual = Number(produtoAtual.custoTotalEstoqueAtual || 0);
+                    const custoUnitarioMedio = Number(produtoAtual.custoUnitarioMedio || 0);
 
                     if (estoqueAtual < calculo.quantidade) {
                         mensagemErro = `Estoque insuficiente. Estoque atual: ${estoqueAtual}.`;
                         return;
                     }
 
-                    produtoAtual.estoqueAtual = estoqueAtual - calculo.quantidade;
+                    custoUnitarioMedioUsado = custoUnitarioMedio;
+                    custoSaidaCalculado = custoUnitarioMedio * calculo.quantidade;
+
+                    const novoEstoque = estoqueAtual - calculo.quantidade;
+                    const novoCustoTotalEstoque = Math.max(0, custoTotalEstoqueAtual - custoSaidaCalculado);
+                    const novoCustoMedio = novoEstoque > 0 ? novoCustoTotalEstoque / novoEstoque : 0;
+
+                    produtoAtual.estoqueAtual = novoEstoque;
+                    produtoAtual.custoTotalEstoqueAtual = Number(novoCustoTotalEstoque.toFixed(2));
+                    produtoAtual.custoUnitarioMedio = Number(novoCustoMedio.toFixed(4));
                     produtoAtual.atualizadoEm = new Date().toISOString();
 
-                    vendaPodeSerRegistrada = true;
+                    lancamentoPodeSerRegistrado = true;
 
                     return produtoAtual;
                 });
 
-                if (!vendaPodeSerRegistrada) {
+                if (!lancamentoPodeSerRegistrado) {
                     mostrarMensagem(
                         els.mensagemVenda,
-                        mensagemErro || "Não foi possível concluir a venda.",
+                        mensagemErro || "Não foi possível concluir o lançamento.",
                         "error"
                     );
                     return;
                 }
 
                 const valorVenda = Number(calculo.valorVenda.toFixed(2));
+                const custoSaida = Number(custoSaidaCalculado.toFixed(2));
                 const taxaOperadora = Number(calculo.taxaOperadora.toFixed(2));
                 const totalCobradoCliente = Number(calculo.totalCobradoCliente.toFixed(2));
+                const lucroBruto = Number((valorVenda - custoSaida).toFixed(2));
 
-                const venda = {
+                const lancamento = {
                     produtoId,
                     produtoNome: calculo.produto.nome,
-                    precoUnitario: Number(calculo.precoUnitario.toFixed(2)),
+                    tipoSaida: calculo.tipoSaida,
+                    dataVenda: calculo.dataVenda,
+                    comprador: calculo.comprador,
                     quantidade: calculo.quantidade,
                     formaPagamento: calculo.formaPagamento,
                     taxaCartaoPercentual: calculo.taxaCartao,
 
+                    precoUnitarioVendido: Number(calculo.precoUnitarioVendido.toFixed(2)),
+                    custoUnitarioMedio: Number(custoUnitarioMedioUsado.toFixed(4)),
+
                     valorVenda,
+                    custoSaida,
                     taxaOperadora,
                     totalCobradoCliente,
+                    lucroBruto,
 
                     subtotal: valorVenda,
                     acrescimoCartao: taxaOperadora,
@@ -1340,14 +1588,14 @@
                     criadoEm: new Date().toISOString()
                 };
 
-                await vendasRef.push(venda);
+                await vendasRef.push(lancamento);
 
                 els.vendaQuantidade.value = "";
                 calcularVenda();
 
-                mostrarMensagem(els.mensagemVenda, "Venda registrada e estoque atualizado.", "success");
+                mostrarMensagem(els.mensagemVenda, "Lançamento registrado e estoque atualizado.", "success");
             } catch (erro) {
-                mostrarMensagem(els.mensagemVenda, `Erro ao concluir venda: ${erro.message}`, "error");
+                mostrarMensagem(els.mensagemVenda, `Erro ao concluir lançamento: ${erro.message}`, "error");
             }
         }
 
@@ -1381,41 +1629,47 @@
         }
 
         function exportarCsv() {
-            const listaVendas = obterListaVendasValidas()
-                .sort((a, b) => new Date(a.criadoEm) - new Date(b.criadoEm));
+            const lista = obterListaLancamentosValidos()
+                .sort((a, b) => String(a.dataVenda || "").localeCompare(String(b.dataVenda || "")));
 
-            if (listaVendas.length === 0) {
-                mostrarMensagem(els.mensagemRelatorio, "Não há vendas para exportar.", "warning");
+            if (lista.length === 0) {
+                mostrarMensagem(els.mensagemRelatorio, "Não há lançamentos para exportar.", "warning");
                 return;
             }
 
             const cabecalho = [
-                "data_hora",
+                "data",
+                "tipo",
+                "comprador",
                 "produto",
-                "preco_unitario",
                 "quantidade",
                 "forma_pagamento",
-                "taxa_cartao_percentual",
+                "preco_unitario_vendido",
+                "custo_unitario_medio",
                 "valor_venda_sem_taxa",
+                "custo_saida",
+                "taxa_cartao_percentual",
                 "taxa_operadora_cartao",
-                "total_cobrado_cliente"
+                "total_cobrado_cliente",
+                "lucro_bruto"
             ];
 
-            const linhas = listaVendas.map(venda => {
-                const valorVenda = obterValorVendaSemTaxa(venda);
-                const taxaOperadora = obterTaxaOperadora(venda);
-                const totalCobradoCliente = obterTotalCobradoCliente(venda);
-
+            const linhas = lista.map(item => {
                 return [
-                    formatarDataHora(venda.criadoEm),
-                    venda.produtoNome,
-                    venda.precoUnitario,
-                    venda.quantidade,
-                    formatarFormaPagamento(venda.formaPagamento),
-                    venda.taxaCartaoPercentual || 0,
-                    valorVenda,
-                    taxaOperadora,
-                    totalCobradoCliente
+                    formatarData(item.dataVenda || item.criadoEm),
+                    formatarTipoSaida(item.tipoSaida || "venda"),
+                    item.comprador || "Evento",
+                    item.produtoNome,
+                    item.quantidade,
+                    formatarFormaPagamento(item.formaPagamento),
+                    item.precoUnitarioVendido || 0,
+                    item.custoUnitarioMedio || 0,
+                    item.valorVenda || 0,
+                    item.custoSaida || 0,
+                    item.taxaCartaoPercentual || 0,
+                    item.taxaOperadora || 0,
+                    item.totalCobradoCliente || 0,
+                    item.lucroBruto || 0
                 ].map(valor => `"${String(valor).replaceAll('"', '""')}"`).join(";");
             });
 
@@ -1425,7 +1679,7 @@
 
             const link = document.createElement("a");
             link.href = url;
-            link.download = "vendas_controle.csv";
+            link.download = "lancamentos_controle.csv";
             link.click();
 
             URL.revokeObjectURL(url);
@@ -1437,15 +1691,11 @@
             const confirmacao = els.confirmarLimparVendas.value.trim().toUpperCase();
 
             if (confirmacao !== "LIMPAR") {
-                mostrarMensagem(
-                    els.mensagemLimparVendas,
-                    "Digite LIMPAR para confirmar.",
-                    "error"
-                );
+                mostrarMensagem(els.mensagemLimparVendas, "Digite LIMPAR para confirmar.", "error");
                 return;
             }
 
-            const confirmar = confirm("Tem certeza que deseja apagar todas as vendas? Os produtos serão mantidos.");
+            const confirmar = confirm("Tem certeza que deseja apagar lançamentos e histórico de compras? Os produtos e estoques atuais serão mantidos.");
 
             if (!confirmar) {
                 return;
@@ -1453,20 +1703,13 @@
 
             try {
                 await vendasRef.remove();
+                await comprasRef.remove();
 
                 els.confirmarLimparVendas.value = "";
 
-                mostrarMensagem(
-                    els.mensagemLimparVendas,
-                    "Vendas apagadas com sucesso.",
-                    "success"
-                );
+                mostrarMensagem(els.mensagemLimparVendas, "Lançamentos apagados com sucesso.", "success");
             } catch (erro) {
-                mostrarMensagem(
-                    els.mensagemLimparVendas,
-                    `Erro ao limpar vendas: ${erro.message}`,
-                    "error"
-                );
+                mostrarMensagem(els.mensagemLimparVendas, `Erro ao limpar lançamentos: ${erro.message}`, "error");
             }
         }
 
@@ -1474,15 +1717,11 @@
             const confirmacao = els.confirmarLimparTudo.value.trim().toUpperCase();
 
             if (confirmacao !== "LIMPAR") {
-                mostrarMensagem(
-                    els.mensagemLimparTudo,
-                    "Digite LIMPAR para confirmar.",
-                    "error"
-                );
+                mostrarMensagem(els.mensagemLimparTudo, "Digite LIMPAR para confirmar.", "error");
                 return;
             }
 
-            const confirmar = confirm("Tem certeza que deseja apagar produtos, estoques e vendas? Esta ação zera o sistema.");
+            const confirmar = confirm("Tem certeza que deseja apagar produtos, estoques, compras, vendas e retiradas? Esta ação zera o sistema.");
 
             if (!confirmar) {
                 return;
@@ -1500,20 +1739,13 @@
                 els.confirmarLimparTudo.value = "";
                 els.vendaQuantidade.value = "";
                 els.estoqueQuantidade.value = "";
+                els.estoqueValorPago.value = "";
 
-                mostrarMensagem(
-                    els.mensagemLimparTudo,
-                    "Banco completo limpo com sucesso.",
-                    "success"
-                );
+                mostrarMensagem(els.mensagemLimparTudo, "Banco completo limpo com sucesso.", "success");
 
                 atualizarAbas("estoque");
             } catch (erro) {
-                mostrarMensagem(
-                    els.mensagemLimparTudo,
-                    `Erro ao limpar banco: ${erro.message}`,
-                    "error"
-                );
+                mostrarMensagem(els.mensagemLimparTudo, `Erro ao limpar banco: ${erro.message}`, "error");
             }
         }
 
@@ -1528,8 +1760,11 @@
 
             vendasRef.on("value", snapshot => {
                 vendas = snapshot.val() || {};
-
                 renderizarRelatorio();
+            });
+
+            comprasRef.on("value", snapshot => {
+                compras = snapshot.val() || {};
             });
         }
 
@@ -1546,8 +1781,15 @@
         els.btnLimparVendas.addEventListener("click", limparSomenteVendas);
         els.btnLimparTudo.addEventListener("click", limparBancoCompleto);
 
-        els.vendaProdutoSelect.addEventListener("change", calcularVenda);
+        els.tipoSaida.addEventListener("change", ajustarTelaPorTipoSaida);
+
+        els.vendaProdutoSelect.addEventListener("change", () => {
+            preencherPrecoPadraoVenda();
+            calcularVenda();
+        });
+
         els.vendaQuantidade.addEventListener("input", calcularVenda);
+        els.precoVendaUnitario.addEventListener("input", calcularVenda);
         els.taxaCartao.addEventListener("change", calcularVenda);
 
         els.formaPagamento.addEventListener("change", () => {
@@ -1558,7 +1800,10 @@
             calcularVenda();
         });
 
+        els.dataVenda.value = hojeISOData();
+
         iniciarListenersFirebase();
+        ajustarTelaPorTipoSaida();
         calcularVenda();
 
         window.selecionarProdutoParaEstoque = selecionarProdutoParaEstoque;
