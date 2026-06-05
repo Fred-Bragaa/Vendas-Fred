@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+
     <title>Controle de Vendas</title>
 
     <style>
@@ -16,6 +17,7 @@
         :root {
             --bg: #020617;
             --card: #0f172a;
+            --card-soft: rgba(15, 23, 42, .92);
             --text: #e2e8f0;
             --muted: #94a3b8;
             --primary: #00AE9D;
@@ -35,6 +37,7 @@
                 linear-gradient(135deg, #020617, #0f172a, #111827);
             color: var(--text);
             padding: 18px;
+            padding-bottom: 96px;
         }
 
         .container {
@@ -63,6 +66,7 @@
             margin: 22px 0;
             overflow-x: auto;
             padding-bottom: 4px;
+            scrollbar-width: thin;
         }
 
         .tab-button {
@@ -74,6 +78,7 @@
             font-weight: 700;
             cursor: pointer;
             white-space: nowrap;
+            min-height: 46px;
         }
 
         .tab-button.active {
@@ -96,14 +101,14 @@
             gap: 18px;
         }
 
-        @media(max-width: 900px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
         }
 
         .card {
-            background: rgba(15, 23, 42, .90);
+            background: var(--card-soft);
             border: 1px solid var(--border);
             border-radius: 22px;
             padding: 20px;
@@ -135,14 +140,14 @@
         input,
         select {
             width: 100%;
-            height: 44px;
+            height: 46px;
             border-radius: 13px;
             border: 1px solid var(--border);
             background: var(--input);
             color: var(--text);
             padding: 0 12px;
             outline: none;
-            font-size: 15px;
+            font-size: 16px;
         }
 
         input:focus,
@@ -181,12 +186,6 @@
             gap: 12px;
         }
 
-        @media(max-width: 620px) {
-            .row {
-                grid-template-columns: 1fr;
-            }
-        }
-
         button {
             border: none;
             cursor: pointer;
@@ -196,7 +195,7 @@
 
         .btn {
             width: 100%;
-            min-height: 44px;
+            min-height: 46px;
             padding: 12px 16px;
             background: var(--primary);
             color: #001b19;
@@ -372,6 +371,7 @@
 
         .result-line strong {
             color: var(--text);
+            text-align: right;
         }
 
         .result-line.total {
@@ -386,23 +386,34 @@
             font-size: 1.25rem;
         }
 
+        .valor-destaque {
+            margin: 16px 0;
+            padding: 18px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(0, 174, 157, .22), rgba(34, 197, 94, .10));
+            border: 1px solid rgba(0, 174, 157, .35);
+            text-align: center;
+        }
+
+        .valor-destaque span {
+            display: block;
+            color: var(--muted);
+            font-size: .9rem;
+            margin-bottom: 6px;
+        }
+
+        .valor-destaque strong {
+            display: block;
+            color: #86efac;
+            font-size: clamp(2.1rem, 8vw, 3.4rem);
+            line-height: 1.08;
+        }
+
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 12px;
             margin-bottom: 18px;
-        }
-
-        @media(max-width: 980px) {
-            .summary-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media(max-width: 560px) {
-            .summary-grid {
-                grid-template-columns: 1fr;
-            }
         }
 
         .summary-box {
@@ -435,6 +446,29 @@
             color: var(--danger);
         }
 
+        .chart-box {
+            margin-top: 18px;
+            padding: 18px;
+            border-radius: 20px;
+            background: rgba(2, 6, 23, .42);
+            border: 1px solid var(--border);
+        }
+
+        .chart-box h3 {
+            margin-bottom: 12px;
+        }
+
+        .chart-wrap {
+            width: 100%;
+            height: 290px;
+            position: relative;
+        }
+
+        .chart-wrap canvas {
+            width: 100%;
+            height: 100%;
+        }
+
         .filter-box {
             background: rgba(2, 6, 23, .38);
             border: 1px solid var(--border);
@@ -447,12 +481,6 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-        }
-
-        @media(max-width: 620px) {
-            .filter-actions {
-                grid-template-columns: 1fr;
-            }
         }
 
         .admin-alert {
@@ -487,6 +515,103 @@
             text-align: center;
             font-size: .82rem;
         }
+
+        @media(max-width: 980px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media(max-width: 760px) {
+            body {
+                padding: 14px;
+                padding-bottom: 108px;
+            }
+
+            .header {
+                text-align: left;
+            }
+
+            .tabs {
+                position: fixed;
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                z-index: 50;
+                margin: 0;
+                padding: 8px;
+                border-radius: 999px;
+                background: rgba(2, 6, 23, .92);
+                border: 1px solid var(--border);
+                box-shadow: 0 14px 40px rgba(0, 0, 0, .45);
+            }
+
+            .tab-button {
+                padding: 11px 13px;
+                min-height: 42px;
+                font-size: .86rem;
+            }
+
+            .grid,
+            .row,
+            .filter-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 16px;
+                border-radius: 18px;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-box {
+                padding: 14px;
+            }
+
+            .summary-box strong {
+                font-size: 1.2rem;
+            }
+
+            .chart-wrap {
+                height: 320px;
+            }
+
+            table {
+                min-width: 980px;
+            }
+
+            .valor-destaque {
+                padding: 16px;
+            }
+        }
+
+        @media(max-width: 420px) {
+            .tab-button {
+                font-size: .78rem;
+                padding: 10px 11px;
+            }
+
+            .tabs {
+                gap: 6px;
+            }
+
+            input,
+            select,
+            .btn {
+                min-height: 48px;
+            }
+
+            .chart-wrap {
+                height: 340px;
+            }
+        }
     </style>
 </head>
 
@@ -501,9 +626,9 @@
 
         <nav class="tabs">
             <button type="button" class="tab-button active" data-tab="estoque">Estoque</button>
-            <button type="button" class="tab-button" data-tab="venda">Registrar venda</button>
+            <button type="button" class="tab-button" data-tab="venda">Venda</button>
             <button type="button" class="tab-button" data-tab="relatorio">Relatório</button>
-            <button type="button" class="tab-button" data-tab="admin">Administração</button>
+            <button type="button" class="tab-button" data-tab="admin">Admin</button>
         </nav>
 
         <section id="tab-estoque" class="tab-content active">
@@ -678,10 +803,20 @@
                     <div>
                         <h3>Resumo do lançamento</h3>
 
+                        <div class="valor-destaque">
+                            <span>Valor da venda</span>
+                            <strong id="resumoSubtotal">R$ 0,00</strong>
+                        </div>
+
                         <div class="result-box">
                             <div class="result-line">
                                 <span>Produto</span>
                                 <strong id="resumoProduto">Nenhum produto selecionado</strong>
+                            </div>
+
+                            <div class="result-line">
+                                <span>Estoque disponível</span>
+                                <strong id="resumoEstoqueDisponivel">0</strong>
                             </div>
 
                             <div class="result-line">
@@ -695,28 +830,13 @@
                             </div>
 
                             <div class="result-line">
-                                <span>Valor da venda</span>
-                                <strong id="resumoSubtotal">R$ 0,00</strong>
-                            </div>
-
-                            <div class="result-line">
-                                <span>Custo da saída</span>
-                                <strong id="resumoCustoSaida">R$ 0,00</strong>
-                            </div>
-
-                            <div class="result-line">
                                 <span>Taxa cartão</span>
                                 <strong id="resumoAcrescimo">R$ 0,00</strong>
                             </div>
 
-                            <div class="result-line">
+                            <div class="result-line total">
                                 <span>Total cobrado do cliente</span>
                                 <strong id="resumoTotal">R$ 0,00</strong>
-                            </div>
-
-                            <div class="result-line total">
-                                <span>Lucro bruto estimado</span>
-                                <strong id="resumoLucro">R$ 0,00</strong>
                             </div>
                         </div>
 
@@ -765,50 +885,6 @@
                 </div>
 
                 <div class="summary-grid">
-                    <div class="summary-box success">
-                        <span>Receita vendas sem taxa</span>
-                        <strong id="relTotalVendido">R$ 0,00</strong>
-                    </div>
-
-                    <div class="summary-box success">
-                        <span>Recebido sem taxa</span>
-                        <strong id="relRecebido">R$ 0,00</strong>
-                    </div>
-
-                    <div class="summary-box warning">
-                        <span>A receber sem taxa</span>
-                        <strong id="relAReceber">R$ 0,00</strong>
-                    </div>
-
-                    <div class="summary-box warning">
-                        <span>Custo das vendas</span>
-                        <strong id="relCustoVendas">R$ 0,00</strong>
-                    </div>
-                </div>
-
-                <div class="summary-grid">
-                    <div class="summary-box success">
-                        <span>Lucro bruto vendas</span>
-                        <strong id="relLucroVendas">R$ 0,00</strong>
-                    </div>
-
-                    <div class="summary-box danger">
-                        <span>Custo retiradas próprias</span>
-                        <strong id="relCustoRetiradas">R$ 0,00</strong>
-                    </div>
-
-                    <div class="summary-box success">
-                        <span>Resultado geral</span>
-                        <strong id="relResultadoGeral">R$ 0,00</strong>
-                    </div>
-
-                    <div class="summary-box">
-                        <span>Taxa cartão</span>
-                        <strong id="relAcrescimosCartao">R$ 0,00</strong>
-                    </div>
-                </div>
-
-                <div class="summary-grid">
                     <div class="summary-box">
                         <span>Dinheiro recebido</span>
                         <strong id="relDinheiro">R$ 0,00</strong>
@@ -820,39 +896,51 @@
                     </div>
 
                     <div class="summary-box">
-                        <span>Cartão recebido sem taxa</span>
+                        <span>Cartão recebido</span>
                         <strong id="relCartao">R$ 0,00</strong>
                     </div>
 
-                    <div class="summary-box">
-                        <span>Número de lançamentos</span>
-                        <strong id="relNumeroVendas">0</strong>
+                    <div class="summary-box success">
+                        <span>Lucro bruto</span>
+                        <strong id="relLucroVendas">R$ 0,00</strong>
                     </div>
                 </div>
 
                 <div class="summary-grid">
-                    <div class="summary-box">
-                        <span>Quantidade vendida</span>
-                        <strong id="relQuantidadeVendida">0</strong>
+                    <div class="summary-box warning">
+                        <span>Gasto/custo</span>
+                        <strong id="relCustoVendas">R$ 0,00</strong>
                     </div>
 
-                    <div class="summary-box">
-                        <span>Quantidade retirada</span>
-                        <strong id="relQuantidadeRetirada">0</strong>
+                    <div class="summary-box danger">
+                        <span>Retiradas próprias</span>
+                        <strong id="relCustoRetiradas">R$ 0,00</strong>
                     </div>
 
                     <div class="summary-box warning">
-                        <span>Vendas pendentes</span>
-                        <strong id="relQtdPendentes">0</strong>
+                        <span>A receber</span>
+                        <strong id="relAReceber">R$ 0,00</strong>
                     </div>
 
                     <div class="summary-box">
-                        <span>Total cobrado pendente</span>
-                        <strong id="relTotalCobradoPendente">R$ 0,00</strong>
+                        <span>Taxa cartão</span>
+                        <strong id="relAcrescimosCartao">R$ 0,00</strong>
                     </div>
                 </div>
 
-                <button type="button" class="btn secondary" id="btnExportarCsv">
+                <div class="chart-box">
+                    <h3>Resumo financeiro do período</h3>
+
+                    <div class="chart-wrap">
+                        <canvas id="graficoResumoFinanceiro"></canvas>
+                    </div>
+
+                    <p class="muted" style="margin-top: 10px;">
+                        O gráfico respeita o filtro de data aplicado no relatório.
+                    </p>
+                </div>
+
+                <button type="button" class="btn secondary" id="btnExportarCsv" style="margin-top: 18px;">
                     Exportar lançamentos CSV
                 </button>
 
@@ -1036,36 +1124,28 @@
             mensagemVenda: document.getElementById("mensagemVenda"),
 
             resumoProduto: document.getElementById("resumoProduto"),
+            resumoEstoqueDisponivel: document.getElementById("resumoEstoqueDisponivel"),
             resumoPreco: document.getElementById("resumoPreco"),
             resumoCustoUnitario: document.getElementById("resumoCustoUnitario"),
             resumoSubtotal: document.getElementById("resumoSubtotal"),
-            resumoCustoSaida: document.getElementById("resumoCustoSaida"),
             resumoAcrescimo: document.getElementById("resumoAcrescimo"),
             resumoTotal: document.getElementById("resumoTotal"),
-            resumoLucro: document.getElementById("resumoLucro"),
 
             filtroDataInicio: document.getElementById("filtroDataInicio"),
             filtroDataFim: document.getElementById("filtroDataFim"),
             btnAplicarFiltroRelatorio: document.getElementById("btnAplicarFiltroRelatorio"),
             btnLimparFiltroRelatorio: document.getElementById("btnLimparFiltroRelatorio"),
             textoFiltroRelatorio: document.getElementById("textoFiltroRelatorio"),
+            graficoResumoFinanceiro: document.getElementById("graficoResumoFinanceiro"),
 
-            relTotalVendido: document.getElementById("relTotalVendido"),
-            relRecebido: document.getElementById("relRecebido"),
-            relAReceber: document.getElementById("relAReceber"),
-            relCustoVendas: document.getElementById("relCustoVendas"),
-            relLucroVendas: document.getElementById("relLucroVendas"),
-            relCustoRetiradas: document.getElementById("relCustoRetiradas"),
-            relResultadoGeral: document.getElementById("relResultadoGeral"),
             relDinheiro: document.getElementById("relDinheiro"),
             relPix: document.getElementById("relPix"),
             relCartao: document.getElementById("relCartao"),
+            relLucroVendas: document.getElementById("relLucroVendas"),
+            relCustoVendas: document.getElementById("relCustoVendas"),
+            relCustoRetiradas: document.getElementById("relCustoRetiradas"),
+            relAReceber: document.getElementById("relAReceber"),
             relAcrescimosCartao: document.getElementById("relAcrescimosCartao"),
-            relNumeroVendas: document.getElementById("relNumeroVendas"),
-            relQuantidadeVendida: document.getElementById("relQuantidadeVendida"),
-            relQuantidadeRetirada: document.getElementById("relQuantidadeRetirada"),
-            relQtdPendentes: document.getElementById("relQtdPendentes"),
-            relTotalCobradoPendente: document.getElementById("relTotalCobradoPendente"),
             tabelaProdutosVendidos: document.getElementById("tabelaProdutosVendidos"),
             tabelaVendas: document.getElementById("tabelaVendas"),
             btnExportarCsv: document.getElementById("btnExportarCsv"),
@@ -1136,6 +1216,10 @@
             }, 4200);
         }
 
+        function obterPrecoPadraoProduto(produto) {
+            return Number(produto.precoVendaPadrao ?? produto.precoUnitario ?? 0);
+        }
+
         function obterProdutosAtivos() {
             return Object.entries(produtos)
                 .filter(([, produto]) => produto && produto.ativo !== false && produto.nome)
@@ -1165,6 +1249,10 @@
             });
 
             document.getElementById(`tab-${tabName}`).classList.add("active");
+
+            if (tabName === "relatorio") {
+                setTimeout(renderizarRelatorio, 80);
+            }
         }
 
         function preencherSelectProdutos() {
@@ -1180,7 +1268,7 @@
             const options = ativos.map(([id, produto]) => {
                 const nome = produto.nome || "Sem nome";
                 const estoque = Number(produto.estoqueAtual || 0);
-                const preco = formatarMoeda(produto.precoVendaPadrao || 0);
+                const preco = formatarMoeda(obterPrecoPadraoProduto(produto));
 
                 return `<option value="${id}">${nome} | Venda padrão: ${preco} | Estoque: ${estoque}</option>`;
             }).join("");
@@ -1216,7 +1304,7 @@
 
             els.tabelaEstoque.innerHTML = ativos.map(([id, produto]) => {
                 const estoque = Number(produto.estoqueAtual || 0);
-                const precoVendaPadrao = Number(produto.precoVendaPadrao || 0);
+                const precoVendaPadrao = obterPrecoPadraoProduto(produto);
                 const custoUnitarioMedio = Number(produto.custoUnitarioMedio || 0);
                 const custoTotalEstoqueAtual = Number(produto.custoTotalEstoqueAtual || 0);
 
@@ -1302,7 +1390,7 @@
                 return;
             }
 
-            els.precoVendaUnitario.value = Number(produto.precoVendaPadrao || 0).toFixed(2);
+            els.precoVendaUnitario.value = obterPrecoPadraoProduto(produto).toFixed(2);
         }
 
         function calcularVenda() {
@@ -1322,7 +1410,9 @@
                 ? 0
                 : normalizarNumero(els.precoVendaUnitario.value);
 
+            const estoqueDisponivel = produto ? Number(produto.estoqueAtual || 0) : 0;
             const custoUnitarioMedio = produto ? Number(produto.custoUnitarioMedio || 0) : 0;
+
             const valorVenda = quantidade * precoUnitarioVendido;
             const custoSaida = quantidade * custoUnitarioMedio;
             const taxaOperadora = valorVenda * (taxaCartao / 100);
@@ -1330,13 +1420,12 @@
             const lucroBruto = valorVenda - custoSaida;
 
             els.resumoProduto.textContent = produto ? produto.nome : "Nenhum produto selecionado";
+            els.resumoEstoqueDisponivel.textContent = estoqueDisponivel;
             els.resumoPreco.textContent = formatarMoeda(precoUnitarioVendido);
             els.resumoCustoUnitario.textContent = formatarMoeda(custoUnitarioMedio);
             els.resumoSubtotal.textContent = formatarMoeda(valorVenda);
-            els.resumoCustoSaida.textContent = formatarMoeda(custoSaida);
             els.resumoAcrescimo.textContent = formatarMoeda(taxaOperadora);
             els.resumoTotal.textContent = formatarMoeda(totalCobradoCliente);
-            els.resumoLucro.textContent = formatarMoeda(lucroBruto);
 
             return {
                 produto,
@@ -1348,6 +1437,7 @@
                 taxaCartao,
                 precoUnitarioVendido,
                 custoUnitarioMedio,
+                estoqueDisponivel,
                 valorVenda,
                 custoSaida,
                 taxaOperadora,
@@ -1460,25 +1550,10 @@
             return filtrarLancamentosPorData(obterListaLancamentosValidos());
         }
 
-        function renderizarRelatorio() {
-            const lista = obterListaLancamentosFiltrada()
-                .sort((a, b) => {
-                    const dataA = obterDataLancamento(a);
-                    const dataB = obterDataLancamento(b);
-
-                    if (dataA !== dataB) {
-                        return dataB.localeCompare(dataA);
-                    }
-
-                    return String(b.criadoEm || "").localeCompare(String(a.criadoEm || ""));
-                });
-
-            atualizarTextoFiltroRelatorio(lista.length);
-
+        function montarDadosResumoFinanceiro(lista) {
             let receitaVendas = 0;
             let recebidoSemTaxa = 0;
             let aReceberSemTaxa = 0;
-            let totalCobradoPendente = 0;
             let custoVendas = 0;
             let lucroVendas = 0;
             let custoRetiradas = 0;
@@ -1486,18 +1561,16 @@
             let totalPixRecebido = 0;
             let totalCartaoRecebido = 0;
             let taxasCartao = 0;
-            let quantidadeVendida = 0;
-            let quantidadeRetirada = 0;
-            let qtdPendentes = 0;
+            let totalCobradoPendente = 0;
 
             const produtosResumo = {};
 
             lista.forEach(item => {
                 const tipoSaida = item.tipoSaida || "venda";
                 const quantidade = Number(item.quantidade || 0);
-                const valorVenda = Number(item.valorVenda || 0);
+                const valorVenda = Number(item.valorVenda || item.total || 0);
                 const custoSaida = Number(item.custoSaida || 0);
-                const taxaOperadora = Number(item.taxaOperadora || 0);
+                const taxaOperadora = Number(item.taxaOperadora || item.acrescimoCartao || 0);
                 const totalCobradoCliente = Number(item.totalCobradoCliente || valorVenda + taxaOperadora);
                 const resultado = valorVenda - custoSaida;
                 const pago = estaPago(item);
@@ -1513,15 +1586,12 @@
                 }
 
                 if (tipoSaida === "retirada") {
-                    quantidadeRetirada += quantidade;
                     custoRetiradas += custoSaida;
-
                     produtosResumo[item.produtoNome].qtdRetirada += quantidade;
                 } else {
                     receitaVendas += valorVenda;
                     custoVendas += custoSaida;
                     lucroVendas += resultado;
-                    quantidadeVendida += quantidade;
 
                     if (pago) {
                         recebidoSemTaxa += valorVenda;
@@ -1541,7 +1611,6 @@
                     } else {
                         aReceberSemTaxa += valorVenda;
                         totalCobradoPendente += totalCobradoCliente;
-                        qtdPendentes += 1;
                     }
 
                     produtosResumo[item.produtoNome].qtdVenda += quantidade;
@@ -1552,26 +1621,153 @@
                 produtosResumo[item.produtoNome].resultado += resultado;
             });
 
-            const resultadoGeral = receitaVendas - custoVendas - custoRetiradas;
+            return {
+                receitaVendas,
+                recebidoSemTaxa,
+                aReceberSemTaxa,
+                custoVendas,
+                lucroVendas,
+                custoRetiradas,
+                totalDinheiroRecebido,
+                totalPixRecebido,
+                totalCartaoRecebido,
+                taxasCartao,
+                totalCobradoPendente,
+                produtosResumo,
+                resultadoGeral: receitaVendas - custoVendas - custoRetiradas
+            };
+        }
 
-            els.relTotalVendido.textContent = formatarMoeda(receitaVendas);
-            els.relRecebido.textContent = formatarMoeda(recebidoSemTaxa);
-            els.relAReceber.textContent = formatarMoeda(aReceberSemTaxa);
-            els.relCustoVendas.textContent = formatarMoeda(custoVendas);
-            els.relLucroVendas.textContent = formatarMoeda(lucroVendas);
-            els.relCustoRetiradas.textContent = formatarMoeda(custoRetiradas);
-            els.relResultadoGeral.textContent = formatarMoeda(resultadoGeral);
-            els.relDinheiro.textContent = formatarMoeda(totalDinheiroRecebido);
-            els.relPix.textContent = formatarMoeda(totalPixRecebido);
-            els.relCartao.textContent = formatarMoeda(totalCartaoRecebido);
-            els.relAcrescimosCartao.textContent = formatarMoeda(taxasCartao);
-            els.relNumeroVendas.textContent = lista.length;
-            els.relQuantidadeVendida.textContent = quantidadeVendida;
-            els.relQuantidadeRetirada.textContent = quantidadeRetirada;
-            els.relQtdPendentes.textContent = qtdPendentes;
-            els.relTotalCobradoPendente.textContent = formatarMoeda(totalCobradoPendente);
+        function desenharRetanguloArredondado(ctx, x, y, largura, altura, raio) {
+            const r = Math.min(raio, largura / 2, altura / 2);
 
-            const produtosLista = Object.entries(produtosResumo)
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + largura - r, y);
+            ctx.quadraticCurveTo(x + largura, y, x + largura, y + r);
+            ctx.lineTo(x + largura, y + altura - r);
+            ctx.quadraticCurveTo(x + largura, y + altura, x + largura - r, y + altura);
+            ctx.lineTo(x + r, y + altura);
+            ctx.quadraticCurveTo(x, y + altura, x, y + altura - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
+
+        function desenharGraficoResumo(dados) {
+            const canvas = els.graficoResumoFinanceiro;
+
+            if (!canvas) {
+                return;
+            }
+
+            const container = canvas.parentElement;
+            const largura = container.clientWidth || 800;
+            const altura = container.clientHeight || 290;
+            const escala = window.devicePixelRatio || 1;
+
+            canvas.width = largura * escala;
+            canvas.height = altura * escala;
+
+            const ctx = canvas.getContext("2d");
+            ctx.setTransform(escala, 0, 0, escala, 0, 0);
+            ctx.clearRect(0, 0, largura, altura);
+
+            const barras = [
+                { nome: "Vendas", valor: dados.receitaVendas, tipo: "venda" },
+                { nome: "Lucro", valor: dados.lucroVendas, tipo: "lucro" },
+                { nome: "Gasto", valor: dados.custoVendas, tipo: "custo" },
+                { nome: "Retirada", valor: dados.custoRetiradas, tipo: "custo" },
+                { nome: "A receber", valor: dados.aReceberSemTaxa, tipo: "neutro" }
+            ];
+
+            const maiorValor = Math.max(
+                ...barras.map(item => Math.abs(Number(item.valor || 0))),
+                1
+            );
+
+            const mobile = largura < 520;
+            const paddingTopo = 26;
+            const paddingBase = mobile ? 64 : 48;
+            const paddingLateral = mobile ? 10 : 20;
+            const areaAltura = altura - paddingTopo - paddingBase;
+            const larguraBarraArea = (largura - paddingLateral * 2) / barras.length;
+            const larguraBarra = Math.min(mobile ? 46 : 74, larguraBarraArea * 0.56);
+
+            ctx.strokeStyle = "rgba(255,255,255,.10)";
+            ctx.beginPath();
+            ctx.moveTo(paddingLateral, paddingTopo + areaAltura);
+            ctx.lineTo(largura - paddingLateral, paddingTopo + areaAltura);
+            ctx.stroke();
+
+            barras.forEach((item, index) => {
+                const centroX = paddingLateral + larguraBarraArea * index + larguraBarraArea / 2;
+                const valor = Number(item.valor || 0);
+                const alturaBarra = Math.max(3, (Math.abs(valor) / maiorValor) * areaAltura);
+                const x = centroX - larguraBarra / 2;
+                const y = paddingTopo + areaAltura - alturaBarra;
+
+                let preenchimento = "rgba(0, 174, 157, 0.78)";
+
+                if (item.tipo === "lucro") {
+                    preenchimento = valor >= 0
+                        ? "rgba(34, 197, 94, 0.78)"
+                        : "rgba(239, 68, 68, 0.78)";
+                }
+
+                if (item.tipo === "custo") {
+                    preenchimento = "rgba(245, 158, 11, 0.78)";
+                }
+
+                if (item.tipo === "neutro") {
+                    preenchimento = "rgba(148, 163, 184, 0.78)";
+                }
+
+                ctx.fillStyle = preenchimento;
+                desenharRetanguloArredondado(ctx, x, y, larguraBarra, alturaBarra, 10);
+                ctx.fill();
+
+                ctx.fillStyle = "#e2e8f0";
+                ctx.font = mobile ? "bold 10px Arial" : "bold 12px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(formatarMoeda(valor), centroX, Math.max(12, y - 10));
+
+                ctx.fillStyle = "#94a3b8";
+                ctx.font = mobile ? "10px Arial" : "12px Arial";
+                ctx.fillText(item.nome, centroX, altura - (mobile ? 32 : 22));
+            });
+        }
+
+        function renderizarRelatorio() {
+            const lista = obterListaLancamentosFiltrada()
+                .sort((a, b) => {
+                    const dataA = obterDataLancamento(a);
+                    const dataB = obterDataLancamento(b);
+
+                    if (dataA !== dataB) {
+                        return dataB.localeCompare(dataA);
+                    }
+
+                    return String(b.criadoEm || "").localeCompare(String(a.criadoEm || ""));
+                });
+
+            atualizarTextoFiltroRelatorio(lista.length);
+
+            const resumo = montarDadosResumoFinanceiro(lista);
+
+            els.relDinheiro.textContent = formatarMoeda(resumo.totalDinheiroRecebido);
+            els.relPix.textContent = formatarMoeda(resumo.totalPixRecebido);
+            els.relCartao.textContent = formatarMoeda(resumo.totalCartaoRecebido);
+            els.relLucroVendas.textContent = formatarMoeda(resumo.lucroVendas);
+            els.relCustoVendas.textContent = formatarMoeda(resumo.custoVendas);
+            els.relCustoRetiradas.textContent = formatarMoeda(resumo.custoRetiradas);
+            els.relAReceber.textContent = formatarMoeda(resumo.aReceberSemTaxa);
+            els.relAcrescimosCartao.textContent = formatarMoeda(resumo.taxasCartao);
+
+            desenharGraficoResumo(resumo);
+
+            const produtosLista = Object.entries(resumo.produtosResumo)
                 .sort(([a], [b]) => a.localeCompare(b));
 
             if (produtosLista.length === 0) {
@@ -1606,9 +1802,9 @@
             } else {
                 els.tabelaVendas.innerHTML = lista.map(item => {
                     const tipoSaida = item.tipoSaida || "venda";
-                    const valorVenda = Number(item.valorVenda || 0);
+                    const valorVenda = Number(item.valorVenda || item.total || 0);
                     const custoSaida = Number(item.custoSaida || 0);
-                    const taxaOperadora = Number(item.taxaOperadora || 0);
+                    const taxaOperadora = Number(item.taxaOperadora || item.acrescimoCartao || 0);
                     const totalCobradoCliente = Number(item.totalCobradoCliente || valorVenda + taxaOperadora);
                     const resultado = valorVenda - custoSaida;
                     const pago = estaPago(item);
@@ -1837,7 +2033,6 @@
                 const taxaOperadora = Number(calculo.taxaOperadora.toFixed(2));
                 const totalCobradoCliente = Number(calculo.totalCobradoCliente.toFixed(2));
                 const lucroBruto = Number((valorVenda - custoSaida).toFixed(2));
-
                 const pago = calculo.tipoSaida === "retirada" ? true : calculo.pago;
 
                 const lancamento = {
@@ -1989,6 +2184,11 @@
 
             const linhas = lista.map(item => {
                 const pago = estaPago(item);
+                const valorVenda = Number(item.valorVenda || item.total || 0);
+                const custoSaida = Number(item.custoSaida || 0);
+                const taxaOperadora = Number(item.taxaOperadora || item.acrescimoCartao || 0);
+                const totalCobradoCliente = Number(item.totalCobradoCliente || valorVenda + taxaOperadora);
+                const lucroBruto = valorVenda - custoSaida;
 
                 return [
                     formatarData(item.dataVenda || item.criadoEm),
@@ -2001,12 +2201,12 @@
                     item.pagoEm ? formatarData(item.pagoEm) : "",
                     item.precoUnitarioVendido || 0,
                     item.custoUnitarioMedio || 0,
-                    item.valorVenda || 0,
-                    item.custoSaida || 0,
+                    valorVenda,
+                    custoSaida,
                     item.taxaCartaoPercentual || 0,
-                    item.taxaOperadora || 0,
-                    item.totalCobradoCliente || 0,
-                    item.lucroBruto || 0
+                    taxaOperadora,
+                    totalCobradoCliente,
+                    lucroBruto
                 ].map(valor => `"${String(valor).replaceAll('"', '""')}"`).join(";");
             });
 
@@ -2147,6 +2347,10 @@
             els.grupoTaxaCartao.classList.toggle("hidden", !ehCartao);
 
             calcularVenda();
+        });
+
+        window.addEventListener("resize", () => {
+            renderizarRelatorio();
         });
 
         els.dataVenda.value = hojeISOData();
