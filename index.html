@@ -101,12 +101,6 @@
             gap: 18px;
         }
 
-        .grid-3 {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-
         .card {
             background: var(--card-soft);
             border: 1px solid var(--border);
@@ -493,6 +487,45 @@
             line-height: 1.5;
         }
 
+        .carrinho-box {
+            margin-top: 18px;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            background: rgba(2, 6, 23, .38);
+            padding: 14px;
+        }
+
+        .carrinho-box h3 {
+            margin-bottom: 12px;
+        }
+
+        .carrinho-lista {
+            display: grid;
+            gap: 10px;
+        }
+
+        .carrinho-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 12px;
+            border-radius: 14px;
+            background: rgba(15, 23, 42, .78);
+            border: 1px solid var(--border);
+        }
+
+        .carrinho-item strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .carrinho-item small {
+            color: var(--muted);
+            line-height: 1.5;
+            display: block;
+        }
+
         .hidden {
             display: none !important;
         }
@@ -519,10 +552,6 @@
         @media(max-width: 980px) {
             .summary-grid {
                 grid-template-columns: repeat(2, 1fr);
-            }
-
-            .grid-3 {
-                grid-template-columns: 1fr;
             }
         }
 
@@ -590,6 +619,14 @@
             .valor-destaque {
                 padding: 16px;
             }
+
+            .carrinho-item {
+                grid-template-columns: 1fr;
+            }
+
+            .carrinho-item .btn.small {
+                width: 100%;
+            }
         }
 
         @media(max-width: 420px) {
@@ -621,7 +658,7 @@
 
         <header class="header">
             <h1>Controle de Vendas</h1>
-            <p>Estoque, compras, vendas, retiradas próprias, pagamentos pendentes e lucro bruto.</p>
+            <p>Estoque, compras, vendas com carrinho, retiradas próprias, pagamentos pendentes e lucro bruto.</p>
         </header>
 
         <nav class="tabs">
@@ -768,7 +805,11 @@
                             </div>
                         </div>
 
-                        <div class="row" id="grupoPagamento">
+                        <button type="button" class="btn secondary" id="btnAdicionarItemCarrinho">
+                            Adicionar produto ao lançamento
+                        </button>
+
+                        <div class="row" id="grupoPagamento" style="margin-top: 14px;">
                             <div class="form-group">
                                 <label for="formaPagamento">Forma de pagamento</label>
                                 <select id="formaPagamento">
@@ -797,6 +838,10 @@
                             Concluir lançamento
                         </button>
 
+                        <button type="button" class="btn danger" id="btnLimparCarrinho" style="margin-top: 10px;">
+                            Limpar carrinho
+                        </button>
+
                         <div id="mensagemVenda" class="message"></div>
                     </div>
 
@@ -804,13 +849,13 @@
                         <h3>Resumo do lançamento</h3>
 
                         <div class="valor-destaque">
-                            <span>Valor da venda</span>
+                            <span>Valor do carrinho</span>
                             <strong id="resumoSubtotal">R$ 0,00</strong>
                         </div>
 
                         <div class="result-box">
                             <div class="result-line">
-                                <span>Produto</span>
+                                <span>Produto selecionado</span>
                                 <strong id="resumoProduto">Nenhum produto selecionado</strong>
                             </div>
 
@@ -820,7 +865,7 @@
                             </div>
 
                             <div class="result-line">
-                                <span>Preço unitário vendido</span>
+                                <span>Preço unitário atual</span>
                                 <strong id="resumoPreco">R$ 0,00</strong>
                             </div>
 
@@ -840,8 +885,16 @@
                             </div>
                         </div>
 
-                        <p class="muted">
-                            Para venda fiada, desmarque “Pago”. Depois, no relatório, você poderá marcar como pago.
+                        <div class="carrinho-box">
+                            <h3>Produtos no lançamento</h3>
+
+                            <div id="listaCarrinhoVenda" class="carrinho-lista">
+                                <p class="muted">Nenhum produto adicionado ainda.</p>
+                            </div>
+                        </div>
+
+                        <p class="muted" style="margin-top: 12px;">
+                            Para vender vários produtos, adicione cada item ao carrinho e depois clique em concluir.
                         </p>
                     </div>
                 </div>
@@ -1093,6 +1146,7 @@
         let produtos = {};
         let vendas = {};
         let compras = {};
+        let itensCarrinhoVenda = [];
 
         const els = {
             produtoNome: document.getElementById("produtoNome"),
@@ -1114,6 +1168,9 @@
             vendaProdutoSelect: document.getElementById("vendaProdutoSelect"),
             vendaQuantidade: document.getElementById("vendaQuantidade"),
             precoVendaUnitario: document.getElementById("precoVendaUnitario"),
+            btnAdicionarItemCarrinho: document.getElementById("btnAdicionarItemCarrinho"),
+            btnLimparCarrinho: document.getElementById("btnLimparCarrinho"),
+            listaCarrinhoVenda: document.getElementById("listaCarrinhoVenda"),
             grupoPagamento: document.getElementById("grupoPagamento"),
             formaPagamento: document.getElementById("formaPagamento"),
             grupoTaxaCartao: document.getElementById("grupoTaxaCartao"),
@@ -1166,6 +1223,10 @@
             const dia = String(hoje.getDate()).padStart(2, "0");
 
             return `${ano}-${mes}-${dia}`;
+        }
+
+        function gerarIdLocal() {
+            return `${Date.now()}_${Math.random().toString(36).slice(2)}`;
         }
 
         function formatarMoeda(valor) {
@@ -1258,6 +1319,7 @@
         function preencherSelectProdutos() {
             const ativos = obterProdutosAtivos();
             const optionVazio = '<option value="">Selecione um produto</option>';
+            const nomeProdutoPadraoVenda = "Figurinha Copa 2026";
 
             if (ativos.length === 0) {
                 els.estoqueProdutoSelect.innerHTML = '<option value="">Nenhum produto cadastrado</option>';
@@ -1276,6 +1338,12 @@
             const estoqueSelecionadoAntes = els.estoqueProdutoSelect.value;
             const vendaSelecionadaAntes = els.vendaProdutoSelect.value;
 
+            const produtoPadraoVenda = ativos.find(([, produto]) => {
+                return String(produto.nome || "").trim() === nomeProdutoPadraoVenda;
+            });
+
+            const produtoPadraoVendaId = produtoPadraoVenda ? produtoPadraoVenda[0] : "";
+
             els.estoqueProdutoSelect.innerHTML = optionVazio + options;
             els.vendaProdutoSelect.innerHTML = optionVazio + options;
 
@@ -1285,7 +1353,12 @@
 
             if (produtos[vendaSelecionadaAntes]) {
                 els.vendaProdutoSelect.value = vendaSelecionadaAntes;
+            } else if (produtoPadraoVendaId) {
+                els.vendaProdutoSelect.value = produtoPadraoVendaId;
             }
+
+            preencherPrecoPadraoVenda();
+            calcularVenda();
         }
 
         function renderizarEstoque() {
@@ -1375,12 +1448,14 @@
             }
 
             calcularVenda();
+            renderizarCarrinhoVenda();
         }
 
         function preencherPrecoPadraoVenda() {
             const tipoSaida = els.tipoSaida.value;
 
             if (tipoSaida === "retirada") {
+                els.precoVendaUnitario.value = "0";
                 return;
             }
 
@@ -1393,6 +1468,42 @@
             els.precoVendaUnitario.value = obterPrecoPadraoProduto(produto).toFixed(2);
         }
 
+        function obterTaxaCartaoAtual() {
+            const tipoSaida = els.tipoSaida.value;
+            const formaPagamento = tipoSaida === "retirada"
+                ? "retirada"
+                : els.formaPagamento.value;
+
+            return formaPagamento === "cartao"
+                ? normalizarNumero(els.taxaCartao.value)
+                : 0;
+        }
+
+        function calcularTotaisCarrinho() {
+            const taxaCartao = obterTaxaCartaoAtual();
+
+            return itensCarrinhoVenda.reduce((totais, item) => {
+                const valorVenda = Number(item.valorVenda || 0);
+                const custoSaida = Number(item.custoSaida || 0);
+                const taxaOperadora = valorVenda * (taxaCartao / 100);
+                const totalCobradoCliente = valorVenda + taxaOperadora;
+
+                totais.valorVenda += valorVenda;
+                totais.custoSaida += custoSaida;
+                totais.taxaOperadora += taxaOperadora;
+                totais.totalCobradoCliente += totalCobradoCliente;
+                totais.lucroBruto += valorVenda - custoSaida;
+
+                return totais;
+            }, {
+                valorVenda: 0,
+                custoSaida: 0,
+                taxaOperadora: 0,
+                totalCobradoCliente: 0,
+                lucroBruto: 0
+            });
+        }
+
         function calcularVenda() {
             const produto = obterProdutoSelecionado(els.vendaProdutoSelect);
             const tipoSaida = els.tipoSaida.value;
@@ -1402,9 +1513,7 @@
                 ? "retirada"
                 : els.formaPagamento.value;
 
-            const taxaCartao = formaPagamento === "cartao"
-                ? normalizarNumero(els.taxaCartao.value)
-                : 0;
+            const taxaCartao = obterTaxaCartaoAtual();
 
             const precoUnitarioVendido = tipoSaida === "retirada"
                 ? 0
@@ -1413,19 +1522,19 @@
             const estoqueDisponivel = produto ? Number(produto.estoqueAtual || 0) : 0;
             const custoUnitarioMedio = produto ? Number(produto.custoUnitarioMedio || 0) : 0;
 
-            const valorVenda = quantidade * precoUnitarioVendido;
-            const custoSaida = quantidade * custoUnitarioMedio;
-            const taxaOperadora = valorVenda * (taxaCartao / 100);
-            const totalCobradoCliente = valorVenda + taxaOperadora;
-            const lucroBruto = valorVenda - custoSaida;
+            const valorVendaItemAtual = quantidade * precoUnitarioVendido;
+            const custoSaidaItemAtual = quantidade * custoUnitarioMedio;
+            const lucroBrutoItemAtual = valorVendaItemAtual - custoSaidaItemAtual;
+
+            const totaisCarrinho = calcularTotaisCarrinho();
 
             els.resumoProduto.textContent = produto ? produto.nome : "Nenhum produto selecionado";
             els.resumoEstoqueDisponivel.textContent = estoqueDisponivel;
             els.resumoPreco.textContent = formatarMoeda(precoUnitarioVendido);
             els.resumoCustoUnitario.textContent = formatarMoeda(custoUnitarioMedio);
-            els.resumoSubtotal.textContent = formatarMoeda(valorVenda);
-            els.resumoAcrescimo.textContent = formatarMoeda(taxaOperadora);
-            els.resumoTotal.textContent = formatarMoeda(totalCobradoCliente);
+            els.resumoSubtotal.textContent = formatarMoeda(totaisCarrinho.valorVenda);
+            els.resumoAcrescimo.textContent = formatarMoeda(totaisCarrinho.taxaOperadora);
+            els.resumoTotal.textContent = formatarMoeda(totaisCarrinho.totalCobradoCliente);
 
             return {
                 produto,
@@ -1438,13 +1547,118 @@
                 precoUnitarioVendido,
                 custoUnitarioMedio,
                 estoqueDisponivel,
-                valorVenda,
-                custoSaida,
-                taxaOperadora,
-                totalCobradoCliente,
-                lucroBruto,
+                valorVenda: valorVendaItemAtual,
+                custoSaida: custoSaidaItemAtual,
+                taxaOperadora: valorVendaItemAtual * (taxaCartao / 100),
+                totalCobradoCliente: valorVendaItemAtual + (valorVendaItemAtual * (taxaCartao / 100)),
+                lucroBruto: lucroBrutoItemAtual,
                 pago: tipoSaida === "retirada" ? true : els.vendaPago.checked
             };
+        }
+
+        function adicionarItemAoCarrinho(exibirMensagem = true) {
+            const calculo = calcularVenda();
+
+            if (!calculo.produto) {
+                mostrarMensagem(els.mensagemVenda, "Selecione um produto para adicionar.", "error");
+                return false;
+            }
+
+            if (calculo.quantidade <= 0) {
+                mostrarMensagem(els.mensagemVenda, "Informe uma quantidade maior que zero.", "error");
+                return false;
+            }
+
+            if (calculo.quantidade > calculo.estoqueDisponivel) {
+                mostrarMensagem(
+                    els.mensagemVenda,
+                    `Estoque insuficiente para ${calculo.produto.nome}. Estoque atual: ${calculo.estoqueDisponivel}.`,
+                    "error"
+                );
+                return false;
+            }
+
+            if (calculo.tipoSaida === "venda" && calculo.precoUnitarioVendido < 0) {
+                mostrarMensagem(els.mensagemVenda, "O preço de venda não pode ser negativo.", "error");
+                return false;
+            }
+
+            const quantidadeJaNoCarrinho = itensCarrinhoVenda
+                .filter(item => item.produtoId === calculo.produto.id)
+                .reduce((total, item) => total + Number(item.quantidade || 0), 0);
+
+            if (quantidadeJaNoCarrinho + calculo.quantidade > calculo.estoqueDisponivel) {
+                mostrarMensagem(
+                    els.mensagemVenda,
+                    `O carrinho ultrapassa o estoque de ${calculo.produto.nome}. Estoque atual: ${calculo.estoqueDisponivel}.`,
+                    "error"
+                );
+                return false;
+            }
+
+            itensCarrinhoVenda.push({
+                itemId: gerarIdLocal(),
+                produtoId: calculo.produto.id,
+                produtoNome: calculo.produto.nome,
+                quantidade: calculo.quantidade,
+                precoUnitarioVendido: Number(calculo.precoUnitarioVendido.toFixed(2)),
+                custoUnitarioMedio: Number(calculo.custoUnitarioMedio.toFixed(4)),
+                valorVenda: Number(calculo.valorVenda.toFixed(2)),
+                custoSaida: Number(calculo.custoSaida.toFixed(2)),
+                lucroBruto: Number(calculo.lucroBruto.toFixed(2))
+            });
+
+            els.vendaQuantidade.value = "";
+
+            if (exibirMensagem) {
+                mostrarMensagem(els.mensagemVenda, "Produto adicionado ao lançamento.", "success");
+            }
+
+            renderizarCarrinhoVenda();
+            calcularVenda();
+
+            return true;
+        }
+
+        function removerItemCarrinho(itemId) {
+            itensCarrinhoVenda = itensCarrinhoVenda.filter(item => item.itemId !== itemId);
+            renderizarCarrinhoVenda();
+            calcularVenda();
+        }
+
+        function limparCarrinhoVenda() {
+            itensCarrinhoVenda = [];
+            renderizarCarrinhoVenda();
+            calcularVenda();
+            mostrarMensagem(els.mensagemVenda, "Carrinho limpo.", "success");
+        }
+
+        function renderizarCarrinhoVenda() {
+            if (itensCarrinhoVenda.length === 0) {
+                els.listaCarrinhoVenda.innerHTML = '<p class="muted">Nenhum produto adicionado ainda.</p>';
+                return;
+            }
+
+            const taxaCartao = obterTaxaCartaoAtual();
+
+            els.listaCarrinhoVenda.innerHTML = itensCarrinhoVenda.map(item => {
+                const taxaOperadora = Number(item.valorVenda || 0) * (taxaCartao / 100);
+                const totalCobradoCliente = Number(item.valorVenda || 0) + taxaOperadora;
+
+                return `
+                    <div class="carrinho-item">
+                        <div>
+                            <strong>${item.produtoNome}</strong>
+                            <small>Qtd: ${item.quantidade} • Unitário: ${formatarMoeda(item.precoUnitarioVendido)}</small>
+                            <small>Venda: ${formatarMoeda(item.valorVenda)} • Total cobrado: ${formatarMoeda(totalCobradoCliente)}</small>
+                        </div>
+
+                        <button type="button" class="btn small danger" onclick="removerItemCarrinho('${item.itemId}')">
+                            Remover
+                        </button>
+                    </div>
+                `;
+            }).join("");
         }
 
         function formatarFormaPagamento(forma) {
@@ -1561,7 +1775,6 @@
             let totalPixRecebido = 0;
             let totalCartaoRecebido = 0;
             let taxasCartao = 0;
-            let totalCobradoPendente = 0;
 
             const produtosResumo = {};
 
@@ -1571,7 +1784,6 @@
                 const valorVenda = Number(item.valorVenda || item.total || 0);
                 const custoSaida = Number(item.custoSaida || 0);
                 const taxaOperadora = Number(item.taxaOperadora || item.acrescimoCartao || 0);
-                const totalCobradoCliente = Number(item.totalCobradoCliente || valorVenda + taxaOperadora);
                 const resultado = valorVenda - custoSaida;
                 const pago = estaPago(item);
 
@@ -1610,7 +1822,6 @@
                         }
                     } else {
                         aReceberSemTaxa += valorVenda;
-                        totalCobradoPendente += totalCobradoCliente;
                     }
 
                     produtosResumo[item.produtoNome].qtdVenda += quantidade;
@@ -1632,7 +1843,6 @@
                 totalPixRecebido,
                 totalCartaoRecebido,
                 taxasCartao,
-                totalCobradoPendente,
                 produtosResumo,
                 resultadoGeral: receitaVendas - custoVendas - custoRetiradas
             };
@@ -1960,115 +2170,147 @@
             }
         }
 
+        function obterQuantidadesPorProdutoCarrinho() {
+            return itensCarrinhoVenda.reduce((mapa, item) => {
+                mapa[item.produtoId] = (mapa[item.produtoId] || 0) + Number(item.quantidade || 0);
+                return mapa;
+            }, {});
+        }
+
         async function concluirVenda() {
-            const calculo = calcularVenda();
+            if (itensCarrinhoVenda.length === 0) {
+                const adicionado = adicionarItemAoCarrinho(false);
 
-            if (!calculo.produto) {
-                mostrarMensagem(els.mensagemVenda, "Selecione um produto.", "error");
+                if (!adicionado) {
+                    return;
+                }
+            }
+
+            if (itensCarrinhoVenda.length === 0) {
+                mostrarMensagem(els.mensagemVenda, "Adicione pelo menos um produto ao lançamento.", "error");
                 return;
             }
 
-            if (calculo.quantidade <= 0) {
-                mostrarMensagem(els.mensagemVenda, "Informe uma quantidade maior que zero.", "error");
-                return;
-            }
+            const calculoBase = calcularVenda();
+            const quantidadesPorProduto = obterQuantidadesPorProdutoCarrinho();
 
-            if (calculo.tipoSaida === "venda" && calculo.precoUnitarioVendido < 0) {
-                mostrarMensagem(els.mensagemVenda, "O preço de venda não pode ser negativo.", "error");
-                return;
-            }
+            for (const produtoId of Object.keys(quantidadesPorProduto)) {
+                const produto = produtos[produtoId];
 
-            const produtoId = calculo.produto.id;
-            const produtoRef = db.ref(`${BASE_PATH}/produtos/${produtoId}`);
+                if (!produto) {
+                    mostrarMensagem(els.mensagemVenda, "Um dos produtos do carrinho não foi encontrado.", "error");
+                    return;
+                }
 
-            try {
-                let lancamentoPodeSerRegistrado = false;
-                let mensagemErro = "";
-                let custoUnitarioMedioUsado = 0;
-                let custoSaidaCalculado = 0;
+                const estoqueAtual = Number(produto.estoqueAtual || 0);
+                const quantidadeNecessaria = Number(quantidadesPorProduto[produtoId] || 0);
 
-                await produtoRef.transaction(produtoAtual => {
-                    if (!produtoAtual) {
-                        mensagemErro = "Produto não encontrado.";
-                        return produtoAtual;
-                    }
-
-                    const estoqueAtual = Number(produtoAtual.estoqueAtual || 0);
-                    const custoTotalEstoqueAtual = Number(produtoAtual.custoTotalEstoqueAtual || 0);
-                    const custoUnitarioMedio = Number(produtoAtual.custoUnitarioMedio || 0);
-
-                    if (estoqueAtual < calculo.quantidade) {
-                        mensagemErro = `Estoque insuficiente. Estoque atual: ${estoqueAtual}.`;
-                        return;
-                    }
-
-                    custoUnitarioMedioUsado = custoUnitarioMedio;
-                    custoSaidaCalculado = custoUnitarioMedio * calculo.quantidade;
-
-                    const novoEstoque = estoqueAtual - calculo.quantidade;
-                    const novoCustoTotalEstoque = Math.max(0, custoTotalEstoqueAtual - custoSaidaCalculado);
-                    const novoCustoMedio = novoEstoque > 0 ? novoCustoTotalEstoque / novoEstoque : 0;
-
-                    produtoAtual.estoqueAtual = novoEstoque;
-                    produtoAtual.custoTotalEstoqueAtual = Number(novoCustoTotalEstoque.toFixed(2));
-                    produtoAtual.custoUnitarioMedio = Number(novoCustoMedio.toFixed(4));
-                    produtoAtual.atualizadoEm = new Date().toISOString();
-
-                    lancamentoPodeSerRegistrado = true;
-
-                    return produtoAtual;
-                });
-
-                if (!lancamentoPodeSerRegistrado) {
+                if (estoqueAtual < quantidadeNecessaria) {
                     mostrarMensagem(
                         els.mensagemVenda,
-                        mensagemErro || "Não foi possível concluir o lançamento.",
+                        `Estoque insuficiente para ${produto.nome}. Estoque atual: ${estoqueAtual}.`,
                         "error"
                     );
                     return;
                 }
+            }
 
-                const valorVenda = Number(calculo.valorVenda.toFixed(2));
-                const custoSaida = Number(custoSaidaCalculado.toFixed(2));
-                const taxaOperadora = Number(calculo.taxaOperadora.toFixed(2));
-                const totalCobradoCliente = Number(calculo.totalCobradoCliente.toFixed(2));
-                const lucroBruto = Number((valorVenda - custoSaida).toFixed(2));
-                const pago = calculo.tipoSaida === "retirada" ? true : calculo.pago;
+            const grupoLancamentoId = gerarIdLocal();
+            const taxaCartao = obterTaxaCartaoAtual();
+            const custoPorProduto = {};
 
-                const lancamento = {
-                    produtoId,
-                    produtoNome: calculo.produto.nome,
-                    tipoSaida: calculo.tipoSaida,
-                    dataVenda: calculo.dataVenda,
-                    comprador: calculo.comprador,
-                    quantidade: calculo.quantidade,
-                    formaPagamento: calculo.formaPagamento,
-                    taxaCartaoPercentual: calculo.taxaCartao,
+            try {
+                for (const produtoId of Object.keys(quantidadesPorProduto)) {
+                    const quantidadeTotalProduto = Number(quantidadesPorProduto[produtoId] || 0);
+                    const produtoRef = db.ref(`${BASE_PATH}/produtos/${produtoId}`);
 
-                    pago,
-                    pagoEm: pago ? new Date().toISOString() : null,
+                    await produtoRef.transaction(produtoAtual => {
+                        if (!produtoAtual) {
+                            return produtoAtual;
+                        }
 
-                    precoUnitarioVendido: Number(calculo.precoUnitarioVendido.toFixed(2)),
-                    custoUnitarioMedio: Number(custoUnitarioMedioUsado.toFixed(4)),
+                        const estoqueAtual = Number(produtoAtual.estoqueAtual || 0);
+                        const custoTotalEstoqueAtual = Number(produtoAtual.custoTotalEstoqueAtual || 0);
+                        const custoUnitarioMedio = Number(produtoAtual.custoUnitarioMedio || 0);
 
-                    valorVenda,
-                    custoSaida,
-                    taxaOperadora,
-                    totalCobradoCliente,
-                    lucroBruto,
+                        if (estoqueAtual < quantidadeTotalProduto) {
+                            return produtoAtual;
+                        }
 
-                    subtotal: valorVenda,
-                    acrescimoCartao: taxaOperadora,
-                    total: valorVenda,
+                        const custoSaidaTotal = custoUnitarioMedio * quantidadeTotalProduto;
+                        const novoEstoque = estoqueAtual - quantidadeTotalProduto;
+                        const novoCustoTotalEstoque = Math.max(0, custoTotalEstoqueAtual - custoSaidaTotal);
+                        const novoCustoMedio = novoEstoque > 0 ? novoCustoTotalEstoque / novoEstoque : 0;
 
-                    criadoEm: new Date().toISOString(),
-                    atualizadoEm: new Date().toISOString()
-                };
+                        produtoAtual.estoqueAtual = novoEstoque;
+                        produtoAtual.custoTotalEstoqueAtual = Number(novoCustoTotalEstoque.toFixed(2));
+                        produtoAtual.custoUnitarioMedio = Number(novoCustoMedio.toFixed(4));
+                        produtoAtual.atualizadoEm = new Date().toISOString();
 
-                await vendasRef.push(lancamento);
+                        custoPorProduto[produtoId] = {
+                            custoUnitarioMedio,
+                            custoSaidaTotal
+                        };
 
+                        return produtoAtual;
+                    });
+                }
+
+                const promessasLancamentos = itensCarrinhoVenda.map(item => {
+                    const custoUnitarioMedioUsado = Number(
+                        custoPorProduto[item.produtoId]?.custoUnitarioMedio ??
+                        item.custoUnitarioMedio ??
+                        0
+                    );
+
+                    const valorVenda = Number(item.valorVenda || 0);
+                    const custoSaida = Number((custoUnitarioMedioUsado * Number(item.quantidade || 0)).toFixed(2));
+                    const taxaOperadora = Number((valorVenda * (taxaCartao / 100)).toFixed(2));
+                    const totalCobradoCliente = Number((valorVenda + taxaOperadora).toFixed(2));
+                    const lucroBruto = Number((valorVenda - custoSaida).toFixed(2));
+                    const pago = calculoBase.tipoSaida === "retirada" ? true : calculoBase.pago;
+
+                    const lancamento = {
+                        grupoLancamentoId,
+                        produtoId: item.produtoId,
+                        produtoNome: item.produtoNome,
+                        tipoSaida: calculoBase.tipoSaida,
+                        dataVenda: calculoBase.dataVenda,
+                        comprador: calculoBase.comprador,
+                        quantidade: item.quantidade,
+                        formaPagamento: calculoBase.formaPagamento,
+                        taxaCartaoPercentual: taxaCartao,
+
+                        pago,
+                        pagoEm: pago ? new Date().toISOString() : null,
+
+                        precoUnitarioVendido: Number(item.precoUnitarioVendido || 0),
+                        custoUnitarioMedio: Number(custoUnitarioMedioUsado.toFixed(4)),
+
+                        valorVenda,
+                        custoSaida,
+                        taxaOperadora,
+                        totalCobradoCliente,
+                        lucroBruto,
+
+                        subtotal: valorVenda,
+                        acrescimoCartao: taxaOperadora,
+                        total: valorVenda,
+
+                        criadoEm: new Date().toISOString(),
+                        atualizadoEm: new Date().toISOString()
+                    };
+
+                    return vendasRef.push(lancamento);
+                });
+
+                await Promise.all(promessasLancamentos);
+
+                itensCarrinhoVenda = [];
                 els.vendaQuantidade.value = "";
                 els.vendaPago.checked = true;
+
+                renderizarCarrinhoVenda();
                 calcularVenda();
 
                 mostrarMensagem(els.mensagemVenda, "Lançamento registrado e estoque atualizado.", "success");
@@ -2165,6 +2407,7 @@
 
             const cabecalho = [
                 "data",
+                "grupo_lancamento",
                 "tipo",
                 "comprador",
                 "produto",
@@ -2192,6 +2435,7 @@
 
                 return [
                     formatarData(item.dataVenda || item.criadoEm),
+                    item.grupoLancamentoId || "",
                     formatarTipoSaida(item.tipoSaida || "venda"),
                     item.comprador || "Evento",
                     item.produtoNome,
@@ -2277,6 +2521,9 @@
                 els.vendaQuantidade.value = "";
                 els.estoqueQuantidade.value = "";
                 els.estoqueValorPago.value = "";
+                itensCarrinhoVenda = [];
+
+                renderizarCarrinhoVenda();
 
                 mostrarMensagem(els.mensagemLimparTudo, "Banco completo limpo com sucesso.", "success");
 
@@ -2319,7 +2566,9 @@
 
         els.btnCadastrarProduto.addEventListener("click", cadastrarProduto);
         els.btnAdicionarEstoque.addEventListener("click", adicionarEstoque);
+        els.btnAdicionarItemCarrinho.addEventListener("click", () => adicionarItemAoCarrinho(true));
         els.btnConcluirVenda.addEventListener("click", concluirVenda);
+        els.btnLimparCarrinho.addEventListener("click", limparCarrinhoVenda);
         els.btnExportarCsv.addEventListener("click", exportarCsv);
         els.btnLimparVendas.addEventListener("click", limparSomenteVendas);
         els.btnLimparTudo.addEventListener("click", limparBancoCompleto);
@@ -2338,7 +2587,12 @@
 
         els.vendaQuantidade.addEventListener("input", calcularVenda);
         els.precoVendaUnitario.addEventListener("input", calcularVenda);
-        els.taxaCartao.addEventListener("change", calcularVenda);
+
+        els.taxaCartao.addEventListener("change", () => {
+            renderizarCarrinhoVenda();
+            calcularVenda();
+        });
+
         els.vendaPago.addEventListener("change", calcularVenda);
 
         els.formaPagamento.addEventListener("change", () => {
@@ -2346,6 +2600,7 @@
 
             els.grupoTaxaCartao.classList.toggle("hidden", !ehCartao);
 
+            renderizarCarrinhoVenda();
             calcularVenda();
         });
 
@@ -2357,11 +2612,13 @@
 
         iniciarListenersFirebase();
         ajustarTelaPorTipoSaida();
+        renderizarCarrinhoVenda();
         calcularVenda();
 
         window.selecionarProdutoParaEstoque = selecionarProdutoParaEstoque;
         window.inativarProduto = inativarProduto;
         window.alterarStatusPagamento = alterarStatusPagamento;
+        window.removerItemCarrinho = removerItemCarrinho;
     </script>
 
 </body>
