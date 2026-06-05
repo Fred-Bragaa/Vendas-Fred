@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <title>Controle de Vendas</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #020617;
+            --card: #0f172a;
+            --card-2: #111827;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --primary: #00AE9D;
+            --primary-dark: #00897d;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: rgba(255, 255, 255, .08);
+            --input: #020617;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(0, 174, 157, .18), transparent 34%),
+                linear-gradient(135deg, #020617, #0f172a, #111827);
+            color: var(--text);
+            padding: 18px;
+        }
+
+        .container {
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: clamp(1.8rem, 5vw, 2.7rem);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin: 22px 0;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .tab-button {
+            border: 1px solid var(--border);
+            background: rgba(15, 23, 42, .88);
+            color: var(--text);
+            padding: 13px 18px;
+            border-radius: 999px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .tab-button.active {
+            background: var(--primary);
+            color: #001b19;
+            border-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        @media(max-width: 850px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(15, 23, 42, .90);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 20px;
+            box-shadow: 0 18px 42px rgba(0, 0, 0, .25);
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 14px;
+        }
+
+        .card h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: var(--muted);
+        }
+
+        .form-group {
+            margin-bottom: 13px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--muted);
+            font-size: .92rem;
+        }
+
+        input,
+        select {
+            width: 100%;
+            height: 44px;
+            border-radius: 13px;
+            border: 1px solid var(--border);
+            background: var(--input);
+            color: var(--text);
+            padding: 0 12px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 174, 157, .18);
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media(max-width: 520px) {
+            .row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        button {
+            border: none;
+            cursor: pointer;
+            font-weight: 800;
+            border-radius: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            min-height: 44px;
+            padding: 12px 16px;
+            background: var(--primary);
+            color: #001b19;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            color: #fff;
+        }
+
+        .btn.secondary {
+            background: #334155;
+            color: var(--text);
+        }
+
+        .btn.secondary:hover {
+            background: #475569;
+        }
+
+        .btn.danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn.danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn.small {
+            width: auto;
+            min-height: 36px;
+            padding: 8px 12px;
+            font-size: .86rem;
+        }
+
+        .message {
+            display: none;
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: .92rem;
+            line-height: 1.4;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: rgba(34, 197, 94, .13);
+            border: 1px solid rgba(34, 197, 94, .35);
+            color: #bbf7d0;
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, .13);
+            border: 1px solid rgba(239, 68, 68, .35);
+            color: #fecaca;
+        }
+
+        .message.warning {
+            background: rgba(245, 158, 11, .13);
+            border: 1px solid rgba(245, 158, 11, .35);
+            color: #fde68a;
+        }
+
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: rgba(2, 6, 23, .45);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 720px;
+        }
+
+        th,
+        td {
+            padding: 13px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        th {
+            color: var(--muted);
+            font-size: .82rem;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            background: rgba(2, 6, 23, .55);
+        }
+
+        td {
+            font-size: .95rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .stock-badge {
+            display: inline-flex;
+            min-width: 46px;
+            justify-content: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-weight: 800;
+            background: rgba(34, 197, 94, .12);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, .22);
+        }
+
+        .stock-badge.low {
+            background: rgba(245, 158, 11, .12);
+            color: #fde68a;
+            border-color: rgba(245, 158, 11, .25);
+        }
+
+        .stock-badge.zero {
+            background: rgba(239, 68, 68, .12);
+            color: #fecaca;
+            border-color: rgba(239, 68, 68, .25);
+        }
+
+        .actions-inline {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .result-box {
+            margin: 14px 0;
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(0, 174, 157, .10);
+            border: 1px solid rgba(0, 174, 157, .28);
+        }
+
+        .result-line {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 8px;
+            color: var(--muted);
+        }
+
+        .result-line strong {
+            color: var(--text);
+        }
+
+        .result-line.total {
+            padding-top: 10px;
+            margin-top: 10px;
+            border-top: 1px solid var(--border);
+            font-size: 1.1rem;
+        }
+
+        .result-line.total strong {
+            color: var(--success);
+            font-size: 1.25rem;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        @media(max-width: 900px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media(max-width: 520px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .summary-box {
+            background: rgba(2, 6, 23, .50);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 16px;
+        }
+
+        .summary-box span {
+            display: block;
+            color: var(--muted);
+            font-size: .86rem;
+            margin-bottom: 7px;
+        }
+
+        .summary-box strong {
+            font-size: 1.35rem;
+        }
+
+        .summary-box.success strong {
+            color: var(--success);
+        }
+
+        .summary-box.warning strong {
+            color: var(--warning);
+        }
+
+        .admin-alert {
+            border: 1px solid rgba(239, 68, 68, .32);
+            background: rgba(239, 68, 68, .08);
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            color: #fecaca;
+            line-height: 1.5;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: .9rem;
+            line-height: 1.5;
+        }
+
+        .empty {
+            padding: 30px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .footer {
+            margin-top: 28px;
+            color: var(--muted);
+            text-align: center;
+            font-size: .82rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+
+        <header class="header">
+            <h1>Controle de Vendas</h1>
+            <p>Sistema simples com estoque, vendas e fechamento separado.</p>
+        </header>
+
+        <nav class="tabs">
+            <button type="button" class="tab-button active" data-tab="estoque">Estoque</button>
+            <button type="button" class="tab-button" data-tab="venda">Registrar venda</button>
+            <button type="button" class="tab-button" data-tab="relatorio">Relatório</button>
+            <button type="button" class="tab-button" data-tab="admin">Administração</button>
+        </nav>
+
+        <section id="tab-estoque" class="tab-content active">
+
+            <div class="grid">
+
+                <div class="card">
+                    <h2>Cadastrar produto</h2>
+
+                    <div class="form-group">
+                        <label for="produtoNome">Nome do produto</label>
+                        <input id="produtoNome" type="text" placeholder="Ex.: Água, Refrigerante, Salgado">
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="produtoPreco">Preço unitário</label>
+                            <input id="produtoPreco" type="number" min="0" step="0.01" value="7">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="produtoEstoque">Estoque inicial</label>
+                            <input id="produtoEstoque" type="number" min="0" step="1" value="0">
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn" id="btnCadastrarProduto">
+                        Cadastrar produto
+                    </button>
+
+                    <div id="mensagemProduto" class="message"></div>
+                </div>
+
+                <div class="card">
+                    <h2>Adicionar estoque</h2>
+
+                    <div class="form-group">
+                        <label for="estoqueProdutoSelect">Produto</label>
+                        <select id="estoqueProdutoSelect">
+                            <option value="">Carregando produtos...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="estoqueQuantidade">Quantidade para adicionar</label>
+                        <input id="estoqueQuantidade" type="number" min="1" step="1" placeholder="Ex.: 10">
+                    </div>
+
+                    <button type="button" class="btn secondary" id="btnAdicionarEstoque">
+                        Adicionar ao estoque
+                    </button>
+
+                    <div id="mensagemEstoque" class="message"></div>
+
+                    <p class="muted" style="margin-top: 14px;">
+                        A tela inicial mostra somente os produtos e o estoque atual.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="card" style="margin-top: 18px;">
+                <h2>Estoque atual</h2>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Preço</th>
+                                <th>Estoque</th>
+                                <th>Situação</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabelaEstoque">
+                            <tr>
+                                <td colspan="5" class="empty">Carregando produtos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <section id="tab-venda" class="tab-content">
+
+            <div class="card">
+                <h2>Registrar venda</h2>
+
+                <div class="grid">
+                    <div>
+                        <div class="form-group">
+                            <label for="vendaProdutoSelect">Produto</label>
+                            <select id="vendaProdutoSelect">
+                                <option value="">Carregando produtos...</option>
+                            </select>
+                        </div>
+
+                        <div class="row">
+                            <div class="form-group">
+                                <label for="vendaQuantidade">Quantidade</label>
+                                <input id="vendaQuantidade" type="number" min="1" step="1" placeholder="Ex.: 2">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="formaPagamento">Forma de pagamento</label>
+                                <select id="formaPagamento">
+                                    <option value="dinheiro">Dinheiro</option>
+                                    <option value="pix">Pix</option>
+                                    <option value="cartao">Cartão</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group hidden" id="grupoTaxaCartao">
+                            <label for="taxaCartao">Acréscimo do cartão</label>
+                            <select id="taxaCartao">
+                                <option value="3">3%</option>
+                                <option value="4">4%</option>
+                                <option value="5">5%</option>
+                            </select>
+                        </div>
+
+                        <button type="button" class="btn" id="btnConcluirVenda">
+                            Concluir venda
+                        </button>
+
+                        <div id="mensagemVenda" class="message"></div>
+                    </div>
+
+                    <div>
+                        <h3>Resumo da venda</h3>
+
+                        <div class="result-box">
+                            <div class="result-line">
+                                <span>Produto</span>
+                                <strong id="resumoProduto">Nenhum produto selecionado</strong>
+                            </div>
+
+                            <div class="result-line">
+                                <span>Preço unitário</span>
+                                <strong id="resumoPreco">R$ 0,00</strong>
+                            </div>
+
+                            <div class="result-line">
+                                <span>Valor da venda</span>
+                                <strong id="resumoSubtotal">R$ 0,00</strong>
+                            </div>
+
+                            <div class="result-line">
+                                <span>Taxa cartão</span>
+                                <strong id="resumoAcrescimo">R$ 0,00</strong>
+                            </div>
+
+                            <div class="result-line total">
+                                <span>Total cobrado do cliente</span>
+                                <strong id="resumoTotal">R$ 0,00</strong>
+                            </div>
+                        </div>
+
+                        <p class="muted">
+                            O total vendido no relatório considera apenas o valor dos produtos. A taxa do cartão fica separada.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <section id="tab-relatorio" class="tab-content">
+
+            <div class="card">
+                <h2>Relatório / Fechamento</h2>
+
+                <div class="summary-grid">
+                    <div class="summary-box success">
+                        <span>Total vendido sem taxa</span>
+                        <strong id="relTotalVendido">R$ 0,00</strong>
+                    </div>
+
+                    <div class="summary-box">
+                        <span>Número de vendas</span>
+                        <strong id="relNumeroVendas">0</strong>
+                    </div>
+
+                    <div class="summary-box">
+                        <span>Quantidade vendida</span>
+                        <strong id="relQuantidadeVendida">0</strong>
+                    </div>
+
+                    <div class="summary-box warning">
+                        <span>Cartão sem taxa</span>
+                        <strong id="relTotalCartao">R$ 0,00</strong>
+                    </div>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="summary-box">
+                        <span>Dinheiro</span>
+                        <strong id="relDinheiro">R$ 0,00</strong>
+                    </div>
+
+                    <div class="summary-box">
+                        <span>Pix</span>
+                        <strong id="relPix">R$ 0,00</strong>
+                    </div>
+
+                    <div class="summary-box">
+                        <span>Cartão</span>
+                        <strong id="relCartao">R$ 0,00</strong>
+                    </div>
+
+                    <div class="summary-box">
+                        <span>Taxa cartão</span>
+                        <strong id="relAcrescimosCartao">R$ 0,00</strong>
+                    </div>
+                </div>
+
+                <button type="button" class="btn secondary" id="btnExportarCsv">
+                    Exportar vendas CSV
+                </button>
+
+                <div id="mensagemRelatorio" class="message"></div>
+            </div>
+
+            <div class="card" style="margin-top: 18px;">
+                <h2>Produtos vendidos</h2>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Quantidade vendida</th>
+                                <th>Total vendido sem taxa</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabelaProdutosVendidos">
+                            <tr>
+                                <td colspan="3" class="empty">Nenhuma venda registrada.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 18px;">
+                <h2>Vendas feitas</h2>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Produto</th>
+                                <th>Qtd</th>
+                                <th>Pagamento</th>
+                                <th>Valor venda</th>
+                                <th>Taxa cartão</th>
+                                <th>Total cobrado</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabelaVendas">
+                            <tr>
+                                <td colspan="7" class="empty">Nenhuma venda registrada.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <section id="tab-admin" class="tab-content">
+
+            <div class="card">
+                <h2>Administração</h2>
+
+                <div class="admin-alert">
+                    Atenção: esta área apaga dados do Firebase. Use apenas se quiser começar do zero.
+                    Para evitar acidente, você precisa digitar <strong>LIMPAR</strong> antes de confirmar.
+                </div>
+
+                <div class="grid">
+                    <div class="card">
+                        <h3>Limpar somente vendas</h3>
+
+                        <p class="muted" style="margin-bottom: 14px;">
+                            Mantém os produtos e estoques cadastrados, mas apaga todas as vendas do relatório.
+                        </p>
+
+                        <div class="form-group">
+                            <label for="confirmarLimparVendas">Digite LIMPAR</label>
+                            <input id="confirmarLimparVendas" type="text" placeholder="LIMPAR">
+                        </div>
+
+                        <button type="button" class="btn danger" id="btnLimparVendas">
+                            Limpar vendas
+                        </button>
+
+                        <div id="mensagemLimparVendas" class="message"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Limpar banco completo</h3>
+
+                        <p class="muted" style="margin-bottom: 14px;">
+                            Apaga produtos, estoques e vendas. O sistema volta completamente zerado.
+                        </p>
+
+                        <div class="form-group">
+                            <label for="confirmarLimparTudo">Digite LIMPAR</label>
+                            <input id="confirmarLimparTudo" type="text" placeholder="LIMPAR">
+                        </div>
+
+                        <button type="button" class="btn danger" id="btnLimparTudo">
+                            Limpar tudo
+                        </button>
+
+                        <div id="mensagemLimparTudo" class="message"></div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <footer class="footer">
+            Controle de Vendas • Firebase Realtime Database
+        </footer>
+
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBm71a2Gl5_pSfQgH2yFS7izSNCuN4n-v4",
+            authDomain: "controle-vendas-dia.firebaseapp.com",
+            databaseURL: "https://controle-vendas-dia-default-rtdb.firebaseio.com",
+            projectId: "controle-vendas-dia",
+            storageBucket: "controle-vendas-dia.firebasestorage.app",
+            messagingSenderId: "1009369951332",
+            appId: "1:1009369951332:web:8a854cc94e891f4c3e4371"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        const db = firebase.database();
+
+        const BASE_PATH = "sistema_vendas";
+        const baseRef = db.ref(BASE_PATH);
+        const produtosRef = db.ref(`${BASE_PATH}/produtos`);
+        const vendasRef = db.ref(`${BASE_PATH}/vendas`);
+        const configuracoesRef = db.ref(`${BASE_PATH}/configuracoes`);
+
+        let produtos = {};
+        let vendas = {};
+
+        const els = {
+            produtoNome: document.getElementById("produtoNome"),
+            produtoPreco: document.getElementById("produtoPreco"),
+            produtoEstoque: document.getElementById("produtoEstoque"),
+            btnCadastrarProduto: document.getElementById("btnCadastrarProduto"),
+            mensagemProduto: document.getElementById("mensagemProduto"),
+
+            estoqueProdutoSelect: document.getElementById("estoqueProdutoSelect"),
+            estoqueQuantidade: document.getElementById("estoqueQuantidade"),
+            btnAdicionarEstoque: document.getElementById("btnAdicionarEstoque"),
+            mensagemEstoque: document.getElementById("mensagemEstoque"),
+
+            tabelaEstoque: document.getElementById("tabelaEstoque"),
+
+            vendaProdutoSelect: document.getElementById("vendaProdutoSelect"),
+            vendaQuantidade: document.getElementById("vendaQuantidade"),
+            formaPagamento: document.getElementById("formaPagamento"),
+            grupoTaxaCartao: document.getElementById("grupoTaxaCartao"),
+            taxaCartao: document.getElementById("taxaCartao"),
+            btnConcluirVenda: document.getElementById("btnConcluirVenda"),
+            mensagemVenda: document.getElementById("mensagemVenda"),
+
+            resumoProduto: document.getElementById("resumoProduto"),
+            resumoPreco: document.getElementById("resumoPreco"),
+            resumoSubtotal: document.getElementById("resumoSubtotal"),
+            resumoAcrescimo: document.getElementById("resumoAcrescimo"),
+            resumoTotal: document.getElementById("resumoTotal"),
+
+            relTotalVendido: document.getElementById("relTotalVendido"),
+            relNumeroVendas: document.getElementById("relNumeroVendas"),
+            relQuantidadeVendida: document.getElementById("relQuantidadeVendida"),
+            relTotalCartao: document.getElementById("relTotalCartao"),
+            relDinheiro: document.getElementById("relDinheiro"),
+            relPix: document.getElementById("relPix"),
+            relCartao: document.getElementById("relCartao"),
+            relAcrescimosCartao: document.getElementById("relAcrescimosCartao"),
+            tabelaProdutosVendidos: document.getElementById("tabelaProdutosVendidos"),
+            tabelaVendas: document.getElementById("tabelaVendas"),
+            btnExportarCsv: document.getElementById("btnExportarCsv"),
+            mensagemRelatorio: document.getElementById("mensagemRelatorio"),
+
+            confirmarLimparVendas: document.getElementById("confirmarLimparVendas"),
+            confirmarLimparTudo: document.getElementById("confirmarLimparTudo"),
+            btnLimparVendas: document.getElementById("btnLimparVendas"),
+            btnLimparTudo: document.getElementById("btnLimparTudo"),
+            mensagemLimparVendas: document.getElementById("mensagemLimparVendas"),
+            mensagemLimparTudo: document.getElementById("mensagemLimparTudo")
+        };
+
+        function formatarMoeda(valor) {
+            return Number(valor || 0).toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL"
+            });
+        }
+
+        function formatarDataHora(valorIso) {
+            if (!valorIso) {
+                return "";
+            }
+
+            const data = new Date(valorIso);
+
+            return data.toLocaleString("pt-BR", {
+                dateStyle: "short",
+                timeStyle: "short"
+            });
+        }
+
+        function normalizarNumero(valor) {
+            const numero = Number(String(valor).replace(",", "."));
+
+            if (Number.isNaN(numero)) {
+                return 0;
+            }
+
+            return numero;
+        }
+
+        function mostrarMensagem(elemento, texto, tipo) {
+            elemento.textContent = texto;
+            elemento.className = `message show ${tipo}`;
+
+            setTimeout(() => {
+                elemento.textContent = "";
+                elemento.className = "message";
+            }, 4200);
+        }
+
+        function obterProdutosAtivos() {
+            return Object.entries(produtos)
+                .filter(([, produto]) => produto && produto.ativo !== false && produto.nome)
+                .sort(([, a], [, b]) => String(a.nome).localeCompare(String(b.nome)));
+        }
+
+        function obterProdutoSelecionado(selectElement) {
+            const produtoId = selectElement.value;
+
+            if (!produtoId || !produtos[produtoId]) {
+                return null;
+            }
+
+            return {
+                id: produtoId,
+                ...produtos[produtoId]
+            };
+        }
+
+        function atualizarAbas(tabName) {
+            document.querySelectorAll(".tab-button").forEach(button => {
+                button.classList.toggle("active", button.dataset.tab === tabName);
+            });
+
+            document.querySelectorAll(".tab-content").forEach(content => {
+                content.classList.remove("active");
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.add("active");
+        }
+
+        function preencherSelectProdutos() {
+            const ativos = obterProdutosAtivos();
+            const optionVazio = '<option value="">Selecione um produto</option>';
+
+            if (ativos.length === 0) {
+                els.estoqueProdutoSelect.innerHTML = '<option value="">Nenhum produto cadastrado</option>';
+                els.vendaProdutoSelect.innerHTML = '<option value="">Nenhum produto cadastrado</option>';
+                return;
+            }
+
+            const options = ativos.map(([id, produto]) => {
+                const nome = produto.nome || "Sem nome";
+                const estoque = Number(produto.estoqueAtual || 0);
+                const preco = formatarMoeda(produto.precoUnitario || 0);
+
+                return `<option value="${id}">${nome} | ${preco} | Estoque: ${estoque}</option>`;
+            }).join("");
+
+            const estoqueSelecionadoAntes = els.estoqueProdutoSelect.value;
+            const vendaSelecionadaAntes = els.vendaProdutoSelect.value;
+
+            els.estoqueProdutoSelect.innerHTML = optionVazio + options;
+            els.vendaProdutoSelect.innerHTML = optionVazio + options;
+
+            if (produtos[estoqueSelecionadoAntes]) {
+                els.estoqueProdutoSelect.value = estoqueSelecionadoAntes;
+            }
+
+            if (produtos[vendaSelecionadaAntes]) {
+                els.vendaProdutoSelect.value = vendaSelecionadaAntes;
+            }
+        }
+
+        function renderizarEstoque() {
+            const ativos = obterProdutosAtivos();
+
+            if (ativos.length === 0) {
+                els.tabelaEstoque.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="empty">
+                            Nenhum produto cadastrado ainda.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            els.tabelaEstoque.innerHTML = ativos.map(([id, produto]) => {
+                const estoque = Number(produto.estoqueAtual || 0);
+                const preco = Number(produto.precoUnitario || 0);
+
+                let classeEstoque = "";
+
+                if (estoque <= 0) {
+                    classeEstoque = "zero";
+                } else if (estoque <= 5) {
+                    classeEstoque = "low";
+                }
+
+                const situacao = estoque <= 0
+                    ? "Sem estoque"
+                    : estoque <= 5
+                        ? "Estoque baixo"
+                        : "Disponível";
+
+                return `
+                    <tr>
+                        <td><strong>${produto.nome}</strong></td>
+                        <td>${formatarMoeda(preco)}</td>
+                        <td>
+                            <span class="stock-badge ${classeEstoque}">
+                                ${estoque}
+                            </span>
+                        </td>
+                        <td>${situacao}</td>
+                        <td>
+                            <div class="actions-inline">
+                                <button type="button" class="btn small secondary" onclick="selecionarProdutoParaEstoque('${id}')">
+                                    + Estoque
+                                </button>
+
+                                <button type="button" class="btn small danger" onclick="inativarProduto('${id}')">
+                                    Ocultar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+        }
+
+        function calcularVenda() {
+            const produto = obterProdutoSelecionado(els.vendaProdutoSelect);
+            const quantidade = Number.parseInt(els.vendaQuantidade.value, 10) || 0;
+            const formaPagamento = els.formaPagamento.value;
+            const taxaCartao = formaPagamento === "cartao"
+                ? normalizarNumero(els.taxaCartao.value)
+                : 0;
+
+            const precoUnitario = produto ? Number(produto.precoUnitario || 0) : 0;
+            const valorVenda = quantidade * precoUnitario;
+            const taxaOperadora = valorVenda * (taxaCartao / 100);
+            const totalCobradoCliente = valorVenda + taxaOperadora;
+
+            els.resumoProduto.textContent = produto ? produto.nome : "Nenhum produto selecionado";
+            els.resumoPreco.textContent = formatarMoeda(precoUnitario);
+            els.resumoSubtotal.textContent = formatarMoeda(valorVenda);
+            els.resumoAcrescimo.textContent = formatarMoeda(taxaOperadora);
+            els.resumoTotal.textContent = formatarMoeda(totalCobradoCliente);
+
+            return {
+                produto,
+                quantidade,
+                formaPagamento,
+                taxaCartao,
+                precoUnitario,
+                valorVenda,
+                taxaOperadora,
+                totalCobradoCliente
+            };
+        }
+
+        function formatarFormaPagamento(forma) {
+            const mapa = {
+                dinheiro: "Dinheiro",
+                pix: "Pix",
+                cartao: "Cartão"
+            };
+
+            return mapa[forma] || forma || "";
+        }
+
+        function obterListaVendasValidas() {
+            return Object.entries(vendas)
+                .filter(([, venda]) => venda && venda.produtoNome)
+                .map(([id, venda]) => ({
+                    id,
+                    ...venda
+                }));
+        }
+
+        function obterValorVendaSemTaxa(venda) {
+            return Number(
+                venda.valorVenda ??
+                venda.subtotal ??
+                venda.total ??
+                0
+            );
+        }
+
+        function obterTaxaOperadora(venda) {
+            return Number(
+                venda.taxaOperadora ??
+                venda.acrescimoCartao ??
+                0
+            );
+        }
+
+        function obterTotalCobradoCliente(venda) {
+            const valorVenda = obterValorVendaSemTaxa(venda);
+            const taxaOperadora = obterTaxaOperadora(venda);
+
+            return Number(
+                venda.totalCobradoCliente ??
+                (valorVenda + taxaOperadora)
+            );
+        }
+
+        function renderizarRelatorio() {
+            const listaVendas = obterListaVendasValidas()
+                .sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
+
+            let totalVendido = 0;
+            let totalDinheiro = 0;
+            let totalPix = 0;
+            let totalCartao = 0;
+            let taxasCartao = 0;
+            let quantidadeVendida = 0;
+
+            const produtosVendidos = {};
+
+            listaVendas.forEach(venda => {
+                const valorVenda = obterValorVendaSemTaxa(venda);
+                const taxaOperadora = obterTaxaOperadora(venda);
+                const quantidade = Number(venda.quantidade || 0);
+
+                totalVendido += valorVenda;
+                quantidadeVendida += quantidade;
+
+                if (venda.formaPagamento === "dinheiro") {
+                    totalDinheiro += valorVenda;
+                }
+
+                if (venda.formaPagamento === "pix") {
+                    totalPix += valorVenda;
+                }
+
+                if (venda.formaPagamento === "cartao") {
+                    totalCartao += valorVenda;
+                    taxasCartao += taxaOperadora;
+                }
+
+                if (!produtosVendidos[venda.produtoNome]) {
+                    produtosVendidos[venda.produtoNome] = {
+                        quantidade: 0,
+                        total: 0
+                    };
+                }
+
+                produtosVendidos[venda.produtoNome].quantidade += quantidade;
+                produtosVendidos[venda.produtoNome].total += valorVenda;
+            });
+
+            els.relTotalVendido.textContent = formatarMoeda(totalVendido);
+            els.relNumeroVendas.textContent = listaVendas.length;
+            els.relQuantidadeVendida.textContent = quantidadeVendida;
+            els.relTotalCartao.textContent = formatarMoeda(totalCartao);
+            els.relDinheiro.textContent = formatarMoeda(totalDinheiro);
+            els.relPix.textContent = formatarMoeda(totalPix);
+            els.relCartao.textContent = formatarMoeda(totalCartao);
+            els.relAcrescimosCartao.textContent = formatarMoeda(taxasCartao);
+
+            const produtosVendidosLista = Object.entries(produtosVendidos)
+                .sort(([a], [b]) => a.localeCompare(b));
+
+            if (produtosVendidosLista.length === 0) {
+                els.tabelaProdutosVendidos.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="empty">
+                            Nenhuma venda registrada.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                els.tabelaProdutosVendidos.innerHTML = produtosVendidosLista.map(([nome, dados]) => `
+                    <tr>
+                        <td><strong>${nome}</strong></td>
+                        <td>${dados.quantidade}</td>
+                        <td>${formatarMoeda(dados.total)}</td>
+                    </tr>
+                `).join("");
+            }
+
+            if (listaVendas.length === 0) {
+                els.tabelaVendas.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty">
+                            Nenhuma venda registrada.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                els.tabelaVendas.innerHTML = listaVendas.map(venda => {
+                    const valorVenda = obterValorVendaSemTaxa(venda);
+                    const taxaOperadora = obterTaxaOperadora(venda);
+                    const totalCobradoCliente = obterTotalCobradoCliente(venda);
+
+                    return `
+                        <tr>
+                            <td>${formatarDataHora(venda.criadoEm)}</td>
+                            <td>${venda.produtoNome}</td>
+                            <td>${venda.quantidade}</td>
+                            <td>${formatarFormaPagamento(venda.formaPagamento)}</td>
+                            <td>${formatarMoeda(valorVenda)}</td>
+                            <td>${formatarMoeda(taxaOperadora)}</td>
+                            <td><strong>${formatarMoeda(totalCobradoCliente)}</strong></td>
+                        </tr>
+                    `;
+                }).join("");
+            }
+        }
+
+        async function cadastrarProduto() {
+            const nome = els.produtoNome.value.trim();
+            const preco = normalizarNumero(els.produtoPreco.value);
+            const estoque = Number.parseInt(els.produtoEstoque.value, 10) || 0;
+
+            if (!nome) {
+                mostrarMensagem(els.mensagemProduto, "Informe o nome do produto.", "error");
+                return;
+            }
+
+            if (preco <= 0) {
+                mostrarMensagem(els.mensagemProduto, "Informe um preço maior que zero.", "error");
+                return;
+            }
+
+            if (estoque < 0) {
+                mostrarMensagem(els.mensagemProduto, "O estoque não pode ser negativo.", "error");
+                return;
+            }
+
+            const novoProdutoRef = produtosRef.push();
+
+            const produto = {
+                nome,
+                precoUnitario: Number(preco.toFixed(2)),
+                estoqueAtual: estoque,
+                ativo: true,
+                criadoEm: new Date().toISOString(),
+                atualizadoEm: new Date().toISOString()
+            };
+
+            try {
+                await novoProdutoRef.set(produto);
+
+                els.produtoNome.value = "";
+                els.produtoPreco.value = "7";
+                els.produtoEstoque.value = "0";
+
+                mostrarMensagem(els.mensagemProduto, "Produto cadastrado com sucesso.", "success");
+            } catch (erro) {
+                mostrarMensagem(els.mensagemProduto, `Erro ao cadastrar produto: ${erro.message}`, "error");
+            }
+        }
+
+        async function adicionarEstoque() {
+            const produtoId = els.estoqueProdutoSelect.value;
+            const quantidade = Number.parseInt(els.estoqueQuantidade.value, 10) || 0;
+
+            if (!produtoId || !produtos[produtoId]) {
+                mostrarMensagem(els.mensagemEstoque, "Selecione um produto.", "error");
+                return;
+            }
+
+            if (quantidade <= 0) {
+                mostrarMensagem(els.mensagemEstoque, "Informe uma quantidade maior que zero.", "error");
+                return;
+            }
+
+            const produtoEstoqueRef = db.ref(`${BASE_PATH}/produtos/${produtoId}/estoqueAtual`);
+            const produtoAtualizadoRef = db.ref(`${BASE_PATH}/produtos/${produtoId}/atualizadoEm`);
+
+            try {
+                await produtoEstoqueRef.transaction(estoqueAtual => {
+                    return Number(estoqueAtual || 0) + quantidade;
+                });
+
+                await produtoAtualizadoRef.set(new Date().toISOString());
+
+                els.estoqueQuantidade.value = "";
+
+                mostrarMensagem(els.mensagemEstoque, "Estoque atualizado com sucesso.", "success");
+            } catch (erro) {
+                mostrarMensagem(els.mensagemEstoque, `Erro ao adicionar estoque: ${erro.message}`, "error");
+            }
+        }
+
+        async function concluirVenda() {
+            const calculo = calcularVenda();
+
+            if (!calculo.produto) {
+                mostrarMensagem(els.mensagemVenda, "Selecione um produto.", "error");
+                return;
+            }
+
+            if (calculo.quantidade <= 0) {
+                mostrarMensagem(els.mensagemVenda, "Informe uma quantidade maior que zero.", "error");
+                return;
+            }
+
+            const produtoId = calculo.produto.id;
+            const produtoRef = db.ref(`${BASE_PATH}/produtos/${produtoId}`);
+
+            try {
+                let vendaPodeSerRegistrada = false;
+                let mensagemErro = "";
+
+                await produtoRef.transaction(produtoAtual => {
+                    if (!produtoAtual) {
+                        mensagemErro = "Produto não encontrado.";
+                        return produtoAtual;
+                    }
+
+                    const estoqueAtual = Number(produtoAtual.estoqueAtual || 0);
+
+                    if (estoqueAtual < calculo.quantidade) {
+                        mensagemErro = `Estoque insuficiente. Estoque atual: ${estoqueAtual}.`;
+                        return;
+                    }
+
+                    produtoAtual.estoqueAtual = estoqueAtual - calculo.quantidade;
+                    produtoAtual.atualizadoEm = new Date().toISOString();
+
+                    vendaPodeSerRegistrada = true;
+
+                    return produtoAtual;
+                });
+
+                if (!vendaPodeSerRegistrada) {
+                    mostrarMensagem(
+                        els.mensagemVenda,
+                        mensagemErro || "Não foi possível concluir a venda.",
+                        "error"
+                    );
+                    return;
+                }
+
+                const valorVenda = Number(calculo.valorVenda.toFixed(2));
+                const taxaOperadora = Number(calculo.taxaOperadora.toFixed(2));
+                const totalCobradoCliente = Number(calculo.totalCobradoCliente.toFixed(2));
+
+                const venda = {
+                    produtoId,
+                    produtoNome: calculo.produto.nome,
+                    precoUnitario: Number(calculo.precoUnitario.toFixed(2)),
+                    quantidade: calculo.quantidade,
+                    formaPagamento: calculo.formaPagamento,
+                    taxaCartaoPercentual: calculo.taxaCartao,
+
+                    valorVenda,
+                    taxaOperadora,
+                    totalCobradoCliente,
+
+                    subtotal: valorVenda,
+                    acrescimoCartao: taxaOperadora,
+                    total: valorVenda,
+
+                    criadoEm: new Date().toISOString()
+                };
+
+                await vendasRef.push(venda);
+
+                els.vendaQuantidade.value = "";
+                calcularVenda();
+
+                mostrarMensagem(els.mensagemVenda, "Venda registrada e estoque atualizado.", "success");
+            } catch (erro) {
+                mostrarMensagem(els.mensagemVenda, `Erro ao concluir venda: ${erro.message}`, "error");
+            }
+        }
+
+        async function inativarProduto(produtoId) {
+            const produto = produtos[produtoId];
+
+            if (!produto) {
+                return;
+            }
+
+            const confirmar = confirm(`Deseja ocultar o produto "${produto.nome}"?`);
+
+            if (!confirmar) {
+                return;
+            }
+
+            try {
+                await db.ref(`${BASE_PATH}/produtos/${produtoId}`).update({
+                    ativo: false,
+                    atualizadoEm: new Date().toISOString()
+                });
+            } catch (erro) {
+                alert(`Erro ao ocultar produto: ${erro.message}`);
+            }
+        }
+
+        function selecionarProdutoParaEstoque(produtoId) {
+            atualizarAbas("estoque");
+            els.estoqueProdutoSelect.value = produtoId;
+            els.estoqueQuantidade.focus();
+        }
+
+        function exportarCsv() {
+            const listaVendas = obterListaVendasValidas()
+                .sort((a, b) => new Date(a.criadoEm) - new Date(b.criadoEm));
+
+            if (listaVendas.length === 0) {
+                mostrarMensagem(els.mensagemRelatorio, "Não há vendas para exportar.", "warning");
+                return;
+            }
+
+            const cabecalho = [
+                "data_hora",
+                "produto",
+                "preco_unitario",
+                "quantidade",
+                "forma_pagamento",
+                "taxa_cartao_percentual",
+                "valor_venda_sem_taxa",
+                "taxa_operadora_cartao",
+                "total_cobrado_cliente"
+            ];
+
+            const linhas = listaVendas.map(venda => {
+                const valorVenda = obterValorVendaSemTaxa(venda);
+                const taxaOperadora = obterTaxaOperadora(venda);
+                const totalCobradoCliente = obterTotalCobradoCliente(venda);
+
+                return [
+                    formatarDataHora(venda.criadoEm),
+                    venda.produtoNome,
+                    venda.precoUnitario,
+                    venda.quantidade,
+                    formatarFormaPagamento(venda.formaPagamento),
+                    venda.taxaCartaoPercentual || 0,
+                    valorVenda,
+                    taxaOperadora,
+                    totalCobradoCliente
+                ].map(valor => `"${String(valor).replaceAll('"', '""')}"`).join(";");
+            });
+
+            const csv = [cabecalho.join(";"), ...linhas].join("\n");
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "vendas_controle.csv";
+            link.click();
+
+            URL.revokeObjectURL(url);
+
+            mostrarMensagem(els.mensagemRelatorio, "CSV exportado com sucesso.", "success");
+        }
+
+        async function limparSomenteVendas() {
+            const confirmacao = els.confirmarLimparVendas.value.trim().toUpperCase();
+
+            if (confirmacao !== "LIMPAR") {
+                mostrarMensagem(
+                    els.mensagemLimparVendas,
+                    "Digite LIMPAR para confirmar.",
+                    "error"
+                );
+                return;
+            }
+
+            const confirmar = confirm("Tem certeza que deseja apagar todas as vendas? Os produtos serão mantidos.");
+
+            if (!confirmar) {
+                return;
+            }
+
+            try {
+                await vendasRef.remove();
+
+                els.confirmarLimparVendas.value = "";
+
+                mostrarMensagem(
+                    els.mensagemLimparVendas,
+                    "Vendas apagadas com sucesso.",
+                    "success"
+                );
+            } catch (erro) {
+                mostrarMensagem(
+                    els.mensagemLimparVendas,
+                    `Erro ao limpar vendas: ${erro.message}`,
+                    "error"
+                );
+            }
+        }
+
+        async function limparBancoCompleto() {
+            const confirmacao = els.confirmarLimparTudo.value.trim().toUpperCase();
+
+            if (confirmacao !== "LIMPAR") {
+                mostrarMensagem(
+                    els.mensagemLimparTudo,
+                    "Digite LIMPAR para confirmar.",
+                    "error"
+                );
+                return;
+            }
+
+            const confirmar = confirm("Tem certeza que deseja apagar produtos, estoques e vendas? Esta ação zera o sistema.");
+
+            if (!confirmar) {
+                return;
+            }
+
+            try {
+                await baseRef.remove();
+
+                await configuracoesRef.set({
+                    nomeSistema: "Controle de Vendas",
+                    eventoAtivo: true,
+                    bancoRecriadoEm: new Date().toISOString()
+                });
+
+                els.confirmarLimparTudo.value = "";
+                els.vendaQuantidade.value = "";
+                els.estoqueQuantidade.value = "";
+
+                mostrarMensagem(
+                    els.mensagemLimparTudo,
+                    "Banco completo limpo com sucesso.",
+                    "success"
+                );
+
+                atualizarAbas("estoque");
+            } catch (erro) {
+                mostrarMensagem(
+                    els.mensagemLimparTudo,
+                    `Erro ao limpar banco: ${erro.message}`,
+                    "error"
+                );
+            }
+        }
+
+        function iniciarListenersFirebase() {
+            produtosRef.on("value", snapshot => {
+                produtos = snapshot.val() || {};
+
+                preencherSelectProdutos();
+                renderizarEstoque();
+                calcularVenda();
+            });
+
+            vendasRef.on("value", snapshot => {
+                vendas = snapshot.val() || {};
+
+                renderizarRelatorio();
+            });
+        }
+
+        document.querySelectorAll(".tab-button").forEach(button => {
+            button.addEventListener("click", () => {
+                atualizarAbas(button.dataset.tab);
+            });
+        });
+
+        els.btnCadastrarProduto.addEventListener("click", cadastrarProduto);
+        els.btnAdicionarEstoque.addEventListener("click", adicionarEstoque);
+        els.btnConcluirVenda.addEventListener("click", concluirVenda);
+        els.btnExportarCsv.addEventListener("click", exportarCsv);
+        els.btnLimparVendas.addEventListener("click", limparSomenteVendas);
+        els.btnLimparTudo.addEventListener("click", limparBancoCompleto);
+
+        els.vendaProdutoSelect.addEventListener("change", calcularVenda);
+        els.vendaQuantidade.addEventListener("input", calcularVenda);
+        els.taxaCartao.addEventListener("change", calcularVenda);
+
+        els.formaPagamento.addEventListener("change", () => {
+            const ehCartao = els.formaPagamento.value === "cartao";
+
+            els.grupoTaxaCartao.classList.toggle("hidden", !ehCartao);
+
+            calcularVenda();
+        });
+
+        iniciarListenersFirebase();
+        calcularVenda();
+
+        window.selecionarProdutoParaEstoque = selecionarProdutoParaEstoque;
+        window.inativarProduto = inativarProduto;
+    </script>
+
+</body>
+
+</html>
